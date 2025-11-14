@@ -15,7 +15,7 @@ jobs:
       AUTOMERGE_APP_ID: ${{ secrets.AUTOMERGE_APP_ID }}
       AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
   pr_title_format_check:
-    uses: NHSDigital/eps-workflow-semantic-release/.github/workflows/pr_title_check.yml@f3d071da30cd01dc0e4472ac0e2d7452db78d1c7
+    uses: NHSDigital/eps-workflow-semantic-release/.github/workflows/pr_title_check.yml@b49130ecbac4f0a052642f6417a0ea0555240fd7
   get_asdf_version:
     runs-on: ubuntu-22.04
     outputs:
