@@ -1,5 +1,5 @@
 {
-  "name": "eps-workflow-quality-checks",
+  "name": "eps-common-workflows",
   "version": "1.0.0",
   "description": "A workflow to run the quality checks for EPS repositories.",
   "main": "index.js",
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NHSDigital/eps-workflow-quality-checks"
+    "url": "https://github.com/NHSDigital/eps-common-workflows.git"
   },
   "author": "NHS Digital",
   "license": "MIT",
