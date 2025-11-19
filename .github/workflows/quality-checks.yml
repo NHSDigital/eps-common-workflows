@@ -275,7 +275,7 @@ jobs:
       - name: make install NodeJS
         if: steps.check_cdk.outputs.cdk_exists == 'true'
         run: |
-          make install-node
+          make install-node && make compile
 
       - name: Run cdk-synth
         if: steps.check_cdk.outputs.cdk_exists == 'true'
