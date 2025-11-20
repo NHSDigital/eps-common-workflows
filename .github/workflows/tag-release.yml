@@ -29,6 +29,10 @@ on:
                 required: false
                 type: string
                 default: "main"
+            extra_asset:
+                description: "An extra asset to include in the release"
+                required: false
+                type: string
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -286,6 +290,7 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
+                  EXTRA_ASSET: ${{ inputs.extra_asset }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -295,6 +300,7 @@ jobs:
                   PUBLISH_PACKAGE: ${{ inputs.publish_package }}
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
+                  EXTRA_ASSET: ${{ inputs.extra_asset }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
