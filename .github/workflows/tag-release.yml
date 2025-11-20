@@ -254,7 +254,7 @@ jobs:
                 artifact-ids: ${{ inputs.extra_artifact_id }}
                 github-token: ${{ secrets.GITHUB_TOKEN }}
                 repository: ${{ inputs.extra_artifact_repository }}
-                run_id: ${{ inputs.extra_artifact_run_id }}
+                run-id: ${{ inputs.extra_artifact_run_id }}
   
             - name: Set VERSION_TAG based on dry_run flag
               id: output_version_tag
