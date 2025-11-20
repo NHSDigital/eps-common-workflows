@@ -14,7 +14,7 @@ on:
             asdfVersion:
                 type: string
                 required: false
-                default: "v0.18.0"
+                default: "0.18.0"
             publish_package:
                 description: "Whether to publish a package to an npm registry"
                 required: true
