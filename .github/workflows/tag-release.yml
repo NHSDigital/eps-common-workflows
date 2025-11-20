@@ -29,8 +29,12 @@ on:
                 required: false
                 type: string
                 default: "main"
-            extra_asset:
-                description: "An extra asset to include in the release"
+            extra_artifact_name:
+                description: "An extra artifact to include in the release"
+                required: false
+                type: string
+            extra_artifact_url:
+                description: "An url to download the extra artifact to include in the release"
                 required: false
                 type: string
         outputs:
@@ -235,6 +239,13 @@ jobs:
                   make install
                   make build
 
+            - name: Download extra artifact
+              if: ${{ inputs.extra_artifact_url != '' }}
+              run: |
+                  curl -L -o "${EXTRA_ASSET}" "${EXTRA_ASSET_URL}"
+              env:
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  EXTRA_ASSET_URL: ${{ inputs.extra_artifact_url }}
             - name: Set VERSION_TAG based on dry_run flag
               id: output_version_tag
               run: |
@@ -290,7 +301,7 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
-                  EXTRA_ASSET: ${{ inputs.extra_asset }}
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -300,7 +311,7 @@ jobs:
                   PUBLISH_PACKAGE: ${{ inputs.publish_package }}
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
-                  EXTRA_ASSET: ${{ inputs.extra_asset }}
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
