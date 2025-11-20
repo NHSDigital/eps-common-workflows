@@ -33,8 +33,16 @@ on:
                 description: "An extra artifact to include in the release"
                 required: false
                 type: string
-            extra_artifact_url:
-                description: "An url to download the extra artifact to include in the release"
+            extra_artifact_id:
+                description: "An id for the extra artifact"
+                required: false
+                type: string
+            extra_artifact_run_id:
+                description: "An run id for the extra artifact"
+                required: false
+                type: string
+            extra_artifact_repository:
+                description: "An repository for the extra artifact"
                 required: false
                 type: string
         outputs:
@@ -240,12 +248,14 @@ jobs:
                   make build
 
             - name: Download extra artifact
-              if: ${{ inputs.extra_artifact_url != '' }}
-              run: |
-                  curl -L -o "${EXTRA_ASSET}" "${EXTRA_ASSET_URL}"
-              env:
-                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
-                  EXTRA_ASSET_URL: ${{ inputs.extra_artifact_url }}
+              if: ${{ inputs.extra_artifact_name != '' }}
+              uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+              with:
+                artifact-ids: ${{ inputs.extra_artifact_id }}
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                repository: ${{ inputs.extra_artifact_repository }}
+                run_id: ${{ inputs.extra_artifact_run_id }}
+  
             - name: Set VERSION_TAG based on dry_run flag
               id: output_version_tag
               run: |
