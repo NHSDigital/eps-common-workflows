@@ -75,7 +75,13 @@ module.exports = {
                     {
                         path: "CHANGELOG.md",
                         label: "CHANGELOG.md"
-                    }
+                    },
+                    ...(process.env.EXTRA_ASSET ? [
+                        {
+                            path: process.env.EXTRA_ASSET,
+                            label: process.env.EXTRA_ASSET
+                        }
+                    ] : [])
                 ],
                 successComment: false,
                 failComment: false,
