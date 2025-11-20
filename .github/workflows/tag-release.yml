@@ -14,7 +14,7 @@ on:
             asdfVersion:
                 type: string
                 required: false
-                default: "v0.18.0"
+                default: "0.18.0"
             publish_package:
                 description: "Whether to publish a package to an npm registry"
                 required: true
@@ -23,7 +23,7 @@ on:
                 description: "The tag format to use for the release tags"
                 required: false
                 type: string
-                default: "v\\${version}"
+                default: "v${version}"
             main_branch:
                 description: "The main branch name for releases"
                 required: false
