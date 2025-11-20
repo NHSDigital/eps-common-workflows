@@ -23,7 +23,7 @@ on:
                 description: "The tag format to use for the release tags"
                 required: false
                 type: string
-                default: "v\\${version}"
+                default: "v${version}"
             main_branch:
                 description: "The main branch name for releases"
                 required: false
