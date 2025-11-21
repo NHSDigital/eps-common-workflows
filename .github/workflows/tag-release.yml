@@ -14,7 +14,7 @@ on:
             asdfVersion:
                 type: string
                 required: false
-                default: "v0.18.0"
+                default: "0.18.0"
             publish_package:
                 description: "Whether to publish a package to an npm registry"
                 required: true
@@ -23,12 +23,28 @@ on:
                 description: "The tag format to use for the release tags"
                 required: false
                 type: string
-                default: "v\\${version}"
+                default: "v${version}"
             main_branch:
                 description: "The main branch name for releases"
                 required: false
                 type: string
                 default: "main"
+            extra_artifact_name:
+                description: "An extra artifact to include in the release"
+                required: false
+                type: string
+            extra_artifact_id:
+                description: "An id for the extra artifact"
+                required: false
+                type: string
+            extra_artifact_run_id:
+                description: "An run id for the extra artifact"
+                required: false
+                type: string
+            extra_artifact_repository:
+                description: "An repository for the extra artifact"
+                required: false
+                type: string
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -231,6 +247,15 @@ jobs:
                   make install
                   make build
 
+            - name: Download extra artifact
+              if: ${{ inputs.extra_artifact_name != '' }}
+              uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+              with:
+                artifact-ids: ${{ inputs.extra_artifact_id }}
+                github-token: ${{ secrets.GITHUB_TOKEN }}
+                repository: ${{ inputs.extra_artifact_repository }}
+                run-id: ${{ inputs.extra_artifact_run_id }}
+  
             - name: Set VERSION_TAG based on dry_run flag
               id: output_version_tag
               run: |
@@ -286,6 +311,7 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -295,6 +321,7 @@ jobs:
                   PUBLISH_PACKAGE: ${{ inputs.publish_package }}
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
