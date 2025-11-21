@@ -174,7 +174,7 @@ jobs:
         run: make test
 
       - name: Generate and check SBOMs
-        uses: NHSDigital/eps-action-sbom@ae6916d542c092ec1636f9a0ba14464ba25a97d1
+        uses: NHSDigital/eps-action-sbom@7684ce6314e515df7b7929fac08b4464f8a03d06
 
       - name: "check is SONAR_TOKEN exists"
         env:
