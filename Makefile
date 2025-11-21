@@ -1,12 +1,15 @@
 .PHONY: install
 
-install: install-node install-python
+install: install-node install-python install-hooks
 
 install-node:
 	npm ci
 
 install-python:
 	poetry install
+
+install-hooks: install-python
+	poetry run pre-commit install --install-hooks --overwrite
 
 deep-clean:
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +

@@ -1,0 +1,67 @@
+name: "Combine PRs"
+
+on:
+    workflow_call:
+        inputs:
+            branchPrefix:
+                description: "Branch prefix to find combinable PRs based on"
+                default: "dependabot"
+                type: string
+            mustBeGreen:
+                description: "Only combine PRs that are green (status is success)"
+                default: true
+                type: boolean
+            combineBranchName:
+                description: "Name of the branch to combine PRs into"
+                default: "combine-dependabot-PRs"
+                type: string
+            ignoreLabel:
+                description: "Exclude PRs with this label"
+                default: "nocombine"
+                type: string
+
+    # Allow manual triggering of the workflow for this repo
+    workflow_dispatch:
+        inputs:
+            branchPrefix:
+                description: "Branch prefix to find combinable PRs based on"
+                default: "dependabot"
+                type: string
+            mustBeGreen:
+                description: "Only combine PRs that are green (status is success)"
+                default: true
+                type: boolean
+            combineBranchName:
+                description: "Name of the branch to combine PRs into"
+                default: "combine-dependabot-PRs"
+                type: string
+            ignoreLabel:
+                description: "Exclude PRs with this label"
+                default: "nocombine"
+                type: string
+
+jobs:
+    combine-prs:
+        runs-on: ubuntu-22.04
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
+              with:
+                  repository: NHSDigital/eps-common-workflows
+                  sparse-checkout-cone-mode: false
+                  sparse-checkout: |
+                      combine-prs.js
+
+            - name: Create Combined PR
+              uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd
+              id: create-combined-pr
+              env:
+                  branchPrefix: ${{ inputs.branchPrefix }}
+                  mustBeGreen: ${{ inputs.mustBeGreen }}
+                  combineBranchName: ${{ inputs.combineBranchName }}
+                  ignoreLabel: ${{ inputs.ignoreLabel }}
+              with:
+                  github-token: ${{secrets.GITHUB_TOKEN}}
+                  script: |
+                      const combinePRs = require('./combine-prs.js');
+                      await combinePRs({ github, context, core });

@@ -62,9 +62,7 @@ RUN ASDF_VERSION=$(awk '!/^#/ && NF {print $1; exit}' /tmp/.tool-versions.asdf) 
     tar -xvzf /tmp/asdf.tar.gz && \
     mv asdf /usr/bin
 
-USER vscode
-
-ENV PATH="$PATH:/home/vscode/.asdf/shims/:/workspaces/eps-prescription-tracker-ui/node_modules/.bin:/workspaces/eps-workflow-quality-checks/.venv/bin"
+ENV PATH="$PATH:/home/vscode/.asdf/bin/:/workspaces/eps-prescription-tracker-ui/node_modules/.bin:/workspaces/eps-common-workflows/.venv/bin"
 
 # Install ASDF plugins#
 RUN asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git && \
@@ -73,9 +71,9 @@ RUN asdf plugin add nodejs https://github.com/asdf-vm/asdf-nodejs.git && \
     asdf plugin add poetry https://github.com/asdf-community/asdf-poetry.git && \
     asdf plugin add python
 
-WORKDIR /workspaces/eps-workflow-quality-checks
+WORKDIR /workspaces/eps-common-workflows
 
-ADD .tool-versions /workspaces/eps-workflow-quality-checks/.tool-versions
+ADD .tool-versions /workspaces/eps-common-workflows/.tool-versions
 ADD .tool-versions /home/vscode/.tool-versions
 
 RUN asdf install python && \

@@ -1,11 +1,11 @@
 [project]
 python = "^3.12"
-name = "eps-workflow-quality-checks"
+name = "eps-common-workflows"
 
 
 [tool.poetry]
 package-mode = false
-name = "eps-workflow-quality-checks"
+name = "eps-common-workflows"
 description = "EPS Workflow quality checks"
 version = "0.0.1-alpha"
 authors = [
@@ -13,11 +13,11 @@ authors = [
 ]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/NHSDigital/eps-workflow-quality-checks"
+repository = "https://github.com/NHSDigital/eps-common-workflows"
 
 [tool.poetry.dependencies]
 python = "^3.14"
-pre-commit = "^4.3.0"
+pre-commit = "^4.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pip-licenses = "^5.0.0"

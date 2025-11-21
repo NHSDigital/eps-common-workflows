@@ -1,5 +1,5 @@
 {
-  "name": "eps-workflow-quality-checks",
+  "name": "eps-common-workflows",
   "version": "1.0.0",
   "description": "A workflow to run the quality checks for EPS repositories.",
   "main": "index.js",
@@ -8,8 +8,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NHSDigital/eps-workflow-quality-checks"
+    "url": "https://github.com/NHSDigital/eps-common-workflows.git"
   },
   "author": "NHS Digital",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/release-notes-generator": "^14.1.0",
+    "conventional-changelog-eslint": "^6.0.0",
+    "license-checker": "^25.0.1",
+    "semantic-release": "^25.0.2"
+  }
 }
