@@ -11,7 +11,6 @@ jobs:
         steps:
             - name: Check PR Title is Prefixed with Change Type
               id: check_prefix
-              continue-on-error: true
               env:
                   PR_TITLE: ${{ github.event.pull_request.title }}
               run: |
@@ -86,3 +85,9 @@ jobs:
                       See the contributing guide for more details:
                       https://github.com/NHSDigital/eps-common-workflows/blob/main/CONTRIBUTING.md
                   comment-tag: pr-link
+
+            - name: Fail job due to invalid PR title format
+              if: steps.check_prefix.outcome != 'success' || steps.check_ticket_reference.outcome != 'success'
+              run: |
+                  echo "Job failed due to invalid PR title format."
+                  exit 1
