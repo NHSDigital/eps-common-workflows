@@ -39,6 +39,16 @@ on:
         required: false
         default: "dev_container_build"
 jobs:
+  get-called-ref:
+    name: Get called ref
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.get_called_ref.outputs.caller-ref }}
+    steps:
+      - id: get_called_ref
+        uses: NHSDigital/eps-common-workflows/.github/actions/get_called_ref@dev_container_build
+        with: 
+          GH_TOKEN_ADMIN: ${{ secrets.GITHUB_TOKEN }}
   quality_checks:
     runs-on: ubuntu-22.04
     steps:
@@ -421,6 +431,7 @@ jobs:
           path: cfn_guard_output
 
   build_dev_container_x64:
+    needs: [get-called-ref]
     permissions:
       id-token: write
     runs-on: ubuntu-22.04
@@ -434,7 +445,7 @@ jobs:
         env:
           SCRIPT_TAG: ${{ inputs.check_ecr_image_scan_results_script_tag }}
         run: |
-          curl -L "https://raw.githubusercontent.com/NHSDigital/eps-workflow-quality-checks/refs/heads/${SCRIPT_TAG}/.github/scripts/check_ecr_image_scan_results.sh" -o check_ecr_image_scan_results.sh
+          curl -L "https://raw.githubusercontent.com/NHSDigital/eps-common-workflows/${{ needs.get-called-ref.outputs.ref }}/.github/scripts/check_ecr_image_scan_results.sh" -o check_ecr_image_scan_results.sh
           chmod +x check_ecr_image_scan_results.sh
       - name: Build dev container
         run: |
@@ -477,6 +488,7 @@ jobs:
           ./check_ecr_image_scan_results.sh
 
   build_dev_container_arm64:
+    needs: [get-called-ref]
     permissions:
       id-token: write
     runs-on: ubuntu-22.04-arm
@@ -490,7 +502,7 @@ jobs:
         env:
           SCRIPT_TAG: ${{ inputs.check_ecr_image_scan_results_script_tag }}
         run: |
-          curl -L "https://raw.githubusercontent.com/NHSDigital/eps-common-workflows/refs/heads/${SCRIPT_TAG}/.github/scripts/check_ecr_image_scan_results.sh" -o check_ecr_image_scan_results.sh
+          curl -L "https://raw.githubusercontent.com/NHSDigital/eps-common-workflows/${{ needs.get-called-ref.outputs.ref }}/.github/scripts/check_ecr_image_scan_results.sh" -o check_ecr_image_scan_results.sh
           chmod +x check_ecr_image_scan_results.sh
 
       - name: Build dev container
