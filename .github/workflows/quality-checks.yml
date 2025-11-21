@@ -33,6 +33,11 @@ on:
         type: string
         description: "The tag to use for the dev container image."
         required: true
+      check_ecr_image_scan_results_script_tag:
+        type: string
+        description: "The tag to download check_ecr_image_scan_results.sh script."
+        required: false
+        default: "dev_container_build"
 jobs:
   get-called-ref:
     name: Get called ref
@@ -437,6 +442,8 @@ jobs:
           fetch-depth: 0
 
       - name: Download check_ecr_image_scan_results.sh script
+        env:
+          SCRIPT_TAG: ${{ inputs.check_ecr_image_scan_results_script_tag }}
         run: |
           curl -L "https://raw.githubusercontent.com/NHSDigital/eps-common-workflows/${{ needs.get-called-ref.outputs.ref }}/.github/scripts/check_ecr_image_scan_results.sh" -o check_ecr_image_scan_results.sh
           chmod +x check_ecr_image_scan_results.sh
@@ -492,6 +499,8 @@ jobs:
           fetch-depth: 0
 
       - name: Download check_ecr_image_scan_results.sh script
+        env:
+          SCRIPT_TAG: ${{ inputs.check_ecr_image_scan_results_script_tag }}
         run: |
           curl -L "https://raw.githubusercontent.com/NHSDigital/eps-common-workflows/${{ needs.get-called-ref.outputs.ref }}/.github/scripts/check_ecr_image_scan_results.sh" -o check_ecr_image_scan_results.sh
           chmod +x check_ecr_image_scan_results.sh
