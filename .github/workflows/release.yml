@@ -57,7 +57,7 @@ jobs:
     uses: ./.github/workflows/build_nhsd_git_secrets.yml
     needs: [get_asdf_version, get_commit_id]
     with:
-      git_secrets_container_ecr: dev-container-quality-checks
+      git_secrets_container_ecr: git-secrets
       git_secrets_container_image_tag: release-${{ needs.get_commit_id.outputs.sha_short }}
     secrets:
       PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
