@@ -60,7 +60,7 @@ jobs:
               run: |
                   aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin ${{ steps.retrieve-deploy-account-id.outputs.account_id }}.dkr.ecr.eu-west-2.amazonaws.com
 
-            - name: Push x64 image to Amazon ECR
+            - name: Push amd64 image to Amazon ECR
               env:
                   ECR_REPOSITORY: ${{ inputs.container_ecr }}
                   IMAGE_TAG: ${{ inputs.container_image_tag }}
