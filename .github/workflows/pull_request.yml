@@ -92,6 +92,16 @@ jobs:
     secrets:
       PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
 
+  publish_nhsd_git_secrets_to_github:
+    needs:
+      [get_asdf_version, get_issue_number_and_commit_id, build_nhsd_git_secrets]
+    uses: ./.github/workflows/publish_nhsd_git_secrets_to_github.yml
+    with:
+      ecr_name: git-secrets
+      container_image_tag: PR-${{ needs.get_issue_number_and_commit_id.outputs.issue_number }}-${{ needs.get_issue_number_and_commit_id.outputs.sha_short }}-nhsd-git-secrets
+    secrets:
+      PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
+
   tag_release:
     needs: [quality_checks, get_asdf_version]
     uses: ./.github/workflows/tag-release.yml
