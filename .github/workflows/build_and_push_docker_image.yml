@@ -37,7 +37,7 @@ jobs:
 
             - name: Build container
               run: |
-                  docker build -f "${DOCKER_FILE}" -t x64-image .
+                  docker build -f "${DOCKER_FILE}" -t amd64-image .
               env:
                   DOCKER_FILE: ${{ inputs.docker_file }}
 
