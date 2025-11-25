@@ -5,6 +5,8 @@ on:
     secrets:
       SONAR_TOKEN:
         required: false
+      PUSH_IMAGE_ROLE:
+        required: true
     inputs:
       install_java:
         type: boolean
@@ -23,7 +25,19 @@ on:
         type: boolean
         description: Toggle to reinstall poetry on top of python version installed by asdf.
         default: false
-
+      dev_container_ecr:
+        type: string
+        description: "The name of the ECR repository to push the dev container image to."
+        required: true
+      dev_container_image_tag:
+        type: string
+        description: "The tag to use for the dev container image."
+        required: true
+      check_ecr_image_scan_results_script_tag:
+        type: string
+        description: "The tag to download check_ecr_image_scan_results.sh script."
+        required: false
+        default: "dev_container_build"
 jobs:
   quality_checks:
     runs-on: ubuntu-22.04
@@ -37,7 +51,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
         with:
-          ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
 
       # Must be done before anything installs, or it will check dependencies for secrets too.
@@ -295,11 +308,10 @@ jobs:
           rm -rf /tmp/ruleset
           rm -rf cfn_guard_output
 
-          wget -O /tmp/ruleset.zip https://github.com/aws-cloudformation/aws-guard-rules-registry/releases/download/1.0.2/ruleset-build-v1.0.2.zip >/dev/null 2>&1
-          unzip /tmp/ruleset.zip -d /tmp/ruleset/ >/dev/null 2>&1
-
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh >/dev/null 2>&1
-
+          wget -O /tmp/ruleset.zip https://github.com/aws-cloudformation/aws-guard-rules-registry/releases/download/1.0.2/ruleset-build-v1.0.2.zip
+          unzip /tmp/ruleset.zip -d /tmp/ruleset/
+          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh -o /tmp/install-guard.sh
+          sh /tmp/install-guard.sh
           mkdir -p cfn_guard_output
 
       - name: Run cfn-guard script for sam templates
@@ -407,3 +419,13 @@ jobs:
         with:
           name: cfn_guard_output
           path: cfn_guard_output
+
+  build_and_push_dev_container_image:
+    uses: ./.github/workflows/build_and_push_docker_image.yml
+    with:
+      container_ecr: ${{ inputs.dev_container_ecr }}
+      container_image_tag: ${{ inputs.dev_container_image_tag }}
+      docker_file: ".devcontainer/Dockerfile"
+      check_ecr_image_scan_results_script_tag: ${{ inputs.check_ecr_image_scan_results_script_tag }}
+    secrets:
+      PUSH_IMAGE_ROLE: ${{ secrets.PUSH_IMAGE_ROLE }}
