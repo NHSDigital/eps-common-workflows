@@ -84,11 +84,12 @@ jobs:
       PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
 
   build_nhsd_git_secrets:
-    uses: ./.github/workflows/build_nhsd_git_secrets.yml
+    uses: ./.github/workflows/build_and_push_docker_image.yml
     needs: [get_asdf_version, get_issue_number_and_commit_id]
     with:
-      git_secrets_container_ecr: git-secrets
-      git_secrets_container_image_tag: PR-${{ needs.get_issue_number_and_commit_id.outputs.issue_number }}-${{ needs.get_issue_number_and_commit_id.outputs.sha_short }}-nhsd-git-secrets
+      container_ecr: git-secrets
+      container_image_tag: PR-${{ needs.get_issue_number_and_commit_id.outputs.issue_number }}-${{ needs.get_issue_number_and_commit_id.outputs.sha_short }}-nhsd-git-secrets
+      docker_file: dockerfiles/nhsd-git-secrets.dockerfile
     secrets:
       PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
 
