@@ -18,6 +18,7 @@ repository = "https://github.com/NHSDigital/eps-common-workflows"
 [tool.poetry.dependencies]
 python = "^3.14"
 pre-commit = "^4.4.0"
+requests = "^2.32.5"
 
 [tool.poetry.group.dev.dependencies]
 pip-licenses = "^5.0.0"
