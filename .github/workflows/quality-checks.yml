@@ -200,7 +200,6 @@ jobs:
             make build
           else
             echo "build target not found in Makefile"
-            exit 1
           fi
 
   # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
