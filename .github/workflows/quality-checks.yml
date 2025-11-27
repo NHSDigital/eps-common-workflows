@@ -193,6 +193,16 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: Run build if Makefile target exists
+        run: |
+          if grep -qE "^build:" "Makefile"; then
+            echo "build target exists in Makefile"
+            make build
+          else
+            echo "build target not found in Makefile"
+            exit 1
+          fi
+
   # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
   cloudformation-validation:
     runs-on: ubuntu-22.04
@@ -407,11 +417,3 @@ jobs:
         with:
           name: cfn_guard_output
           path: cfn_guard_output
-
-      - name: Build project
-        run: |
-          if scripts/check_makefile_target.sh build; then
-            make build
-          else
-            echo "No build target found in Makefile, skipping build step"
-          fi
