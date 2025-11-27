@@ -214,3 +214,29 @@ repos:
         - 'docker run -v "$LOCAL_WORKSPACE_FOLDER:/src" git-secrets --pre_commit_hook'
       language: system
 ```
+
+## Run all releases
+
+There are some scripts that can be used to trigger releases for all our repos.   
+It is invoked by running `./scripts/run_all_release.sh`.   
+This first authenticates to github using github cli tools to get a valid github token.   
+
+It then has an array of repos which it loops through asking for confirmation if you want to run deployment for it.   
+
+For any that you have answered yes to, it then calls the python script `scripts/trigger_release.py`.   
+
+The python script will trigger the release.yml workflow for that repo and monitor the the run for it.   
+When it reaches one of the steps release_qa, release_ref, release_int it will approve release to that environment.   
+Once the run reaches release_prod step, the python script will exit.   
+The python script will also exit if the github run fails, or is cancelled at any step, or there is an unexpected response from github (eg user does not have permission to approve a deployment).   
+When the python script finishes, it logs the run url, the tag and summary of what happened.   
+Python logs go to the console, and to a timestamped file in the logs folder.
+
+When all runs of the python script have finished then the shell script exits showing a summary of failed and successful runs.   
+
+
+If a run fails on a step BEFORE the tag_release step,  and the failure is transient (eg quality checks fails installing dependencies due to npm being down) then the whole release workflow can be rerun - either via this script or using the github website.   
+
+If a run fails on a step AFTER the tag_release step, and the failure is transient (eg regression tests failure) then that failing step can just be re-run manually via the github website.   
+
+If a run fails due to a code or cloudformation/cdk issue, then a new pull request should be created to fix this, merged to main, and a new release triggered.   

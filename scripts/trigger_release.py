@@ -7,6 +7,7 @@ Requires GH_TOKEN environment variable with permissions to trigger workflows.
 import os
 import sys
 import time
+import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 import requests
@@ -15,10 +16,11 @@ import requests
 class GitHubWorkflowMonitor:
     """Monitor and control GitHub Actions workflow runs."""
 
-    def __init__(self, token: str, owner: str, repo: str):
+    def __init__(self, token: str, owner: str, repo: str, logger: logging.Logger):
         self.token = token
         self.owner = owner
         self.repo = repo
+        self.logger = logger
         self.base_url = f"https://api.github.com/repos/{owner}/{repo}"
         self.headers = {
             "Accept": "application/vnd.github+json",
@@ -46,18 +48,18 @@ class GitHubWorkflowMonitor:
             "ref": branch
         }
 
-        print(
+        self.logger.info(
             f"🚀 Triggering workflow '{workflow_file}' on branch '{branch}' "
             f"for repo '{self.owner}/{self.repo}'..."
         )
         response = requests.post(url, headers=self.headers, json=data)
 
         if response.status_code == 204:
-            print("✅ Workflow triggered successfully")
+            self.logger.info("✅ Workflow triggered successfully")
             return True
         else:
-            print(f"❌ Failed to trigger workflow: {response.status_code}")
-            print(f"Response: {response.text}")
+            self.logger.error(f"❌ Failed to trigger workflow: {response.status_code}")
+            self.logger.error(f"Response: {response.text}")
             return False
 
     def get_latest_run(
@@ -74,7 +76,7 @@ class GitHubWorkflowMonitor:
         response = requests.get(url, headers=self.headers, params=params)
 
         if response.status_code != 200:
-            print(f"❌ Failed to get workflow runs: {response.status_code}")
+            self.logger.error(f"❌ Failed to get workflow runs: {response.status_code}")
             return None
 
         data = response.json()
@@ -130,8 +132,8 @@ class GitHubWorkflowMonitor:
         if response.status_code == 200:
             return True
         else:
-            print(f"⚠️  Failed to approve deployment: {response.status_code}")
-            print(f"Response: {response.text}")
+            self.logger.warning(f"⚠️  Failed to approve deployment: {response.status_code}")
+            self.logger.warning(f"Response: {response.text}")
             return False
 
     def check_for_errors(
@@ -151,7 +153,7 @@ class GitHubWorkflowMonitor:
 
     def monitor_and_approve(self) -> bool:
         """Main monitoring loop."""
-        print(f"\n📊 Monitoring workflow run: {self.run_url}\n")
+        self.logger.info(f"\n📊 Monitoring workflow run: {self.run_url}\n")
 
         tag_release_completed = False
 
@@ -159,18 +161,18 @@ class GitHubWorkflowMonitor:
             # Get current run details
             run_details = self.get_run_details(self.run_id)
             if not run_details:
-                print("❌ Failed to get run details")
+                self.logger.error("❌ Failed to get run details")
                 return False
 
             jobs_data = self.get_run_jobs(self.run_id)
             if not jobs_data:
-                print("❌ Failed to get jobs data")
+                self.logger.error("❌ Failed to get jobs data")
                 return False
 
             # Check for errors
             error = self.check_for_errors(run_details, jobs_data)
             if error:
-                print(f"\n❌ ERROR: {error}")
+                self.logger.error(f"\n❌ ERROR: {error}")
                 self.print_summary(error)
                 return False
 
@@ -187,7 +189,7 @@ class GitHubWorkflowMonitor:
                 if (job_conclusion == "success" and
                         job_name not in self.completed_jobs):
                     self.completed_jobs.add(job_name)
-                    print(f"✅ Job completed: {job_name}")
+                    self.logger.info(f"✅ Job completed: {job_name}")
 
                     # Check if tag_release completed
                     if job_name == "tag_release / tag_release" and not tag_release_completed:
@@ -196,7 +198,7 @@ class GitHubWorkflowMonitor:
                         # jobs that use it
                         self._extract_version_from_jobs(jobs_data)
                         if self.version_tag:
-                            print(f"🏷️  Version tag: {self.version_tag}")
+                            self.logger.info(f"🏷️  Version tag: {self.version_tag}")
 
             # Check for pending deployments
             pending = self.get_pending_deployments(self.run_id)
@@ -207,7 +209,7 @@ class GitHubWorkflowMonitor:
 
                     # Check if this is release_prod
                     if env_name == "prod":
-                        print(
+                        self.logger.info(
                             f"\n🛑 Reached production deployment for "
                             f"environment '{env_name}'"
                         )
@@ -220,25 +222,25 @@ class GitHubWorkflowMonitor:
                     job_name = f"release_{env_name}"
                     if (job_name in self.jobs_requiring_approval and
                             job_name not in self.approved_jobs):
-                        print(
+                        self.logger.info(
                             f"✓ Approving deployment to environment "
                             f"'{env_name}'..."
                         )
                         if self.approve_deployment(self.run_id, [env_id]):
                             self.approved_jobs.add(job_name)
-                            print(f"✅ Approved: {job_name}")
+                            self.logger.info(f"✅ Approved: {job_name}")
                         else:
-                            print(f"⚠️  Failed to approve: {job_name}")
+                            self.logger.warning(f"⚠️  Failed to approve: {job_name}")
 
             # Check if workflow is complete
             if run_details.get("status") == "completed":
                 if run_details.get("conclusion") == "success":
-                    print("\n✅ Workflow completed successfully")
+                    self.logger.info("\n✅ Workflow completed successfully")
                     self.print_summary("Completed successfully")
                     return True
                 else:
                     conclusion = run_details.get("conclusion", "unknown")
-                    print(
+                    self.logger.warning(
                         f"\n⚠️  Workflow completed with conclusion: "
                         f"{conclusion}"
                     )
@@ -329,7 +331,7 @@ class GitHubWorkflowMonitor:
             if j["status"] == "queued"
         )
 
-        print(
+        self.logger.info(
             f"⏳ Workflow still running... [Status: {status}, "
             f"Jobs: {completed} completed, {in_progress} in progress, "
             f"{queued} queued]"
@@ -337,15 +339,69 @@ class GitHubWorkflowMonitor:
 
     def print_summary(self, outcome: str) -> None:
         """Print final summary."""
-        print("\n" + "="*70)
-        print(f"📋 RELEASE WORKFLOW SUMMARY {self.repo}")
-        print("="*70)
-        print(f"Workflow URL: {self.run_url}")
-        print(f"Version Tag:  {self.version_tag or 'N/A'}")
-        print(f"Outcome:      {outcome}")
+        self.logger.info("\n" + "="*70)
+        self.logger.info(f"📋 RELEASE WORKFLOW SUMMARY {self.repo}")
+        self.logger.info("="*70)
+        self.logger.info(f"Workflow URL: {self.run_url}")
+        self.logger.info(f"Version Tag:  {self.version_tag or 'N/A'}")
+        self.logger.info(f"Outcome:      {outcome}")
         approved = ', '.join(sorted(self.approved_jobs)) or 'None'
-        print(f"Approved:     {approved}")
-        print("="*70 + "\n")
+        self.logger.info(f"Approved:     {approved}")
+        self.logger.info("="*70 + "\n")
+
+
+def setup_logger(repo_name: str) -> logging.Logger:
+    """Set up logger to write to file and console."""
+    # Create logs directory if it doesn't exist
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+    
+    # Create timestamp for log filename
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    
+    # Sanitize repo name for filename (replace / with _)
+    safe_repo_name = repo_name.replace("/", "_")
+    
+    # Create log filename
+    log_file = os.path.join(log_dir, f"release_{safe_repo_name}_{timestamp}.log")
+    
+    # Create logger
+    logger = logging.getLogger("trigger_release")
+    logger.setLevel(logging.INFO)
+    
+    # Remove any existing handlers
+    logger.handlers.clear()
+    
+    # Create file handler
+    file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    file_handler.setLevel(logging.INFO)
+    
+    # Create console handler
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setLevel(logging.INFO)
+    
+    # Create formatters - console includes repo name, file doesn't need it
+    file_formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    console_formatter = logging.Formatter(
+        f'%(asctime)s - [{repo_name}] - %(levelname)s - %(message)s',
+        datefmt='%Y-%m-%d %H:%M:%S'
+    )
+    
+    # Add formatter to handlers
+    file_handler.setFormatter(file_formatter)
+    console_handler.setFormatter(console_formatter)
+    
+    # Add handlers to logger
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)
+    
+    logger.info(f"Logging to file: {log_file}")
+    
+    return logger
 
 
 def main():
@@ -377,41 +433,45 @@ def main():
     try:
         owner, repo = args.repo.split('/')
     except ValueError:
+        # Use basic print here since logger isn't set up yet
         print(
             "❌ Error: Repository must be in format owner/repo "
             "(e.g., NHSDigital/eps-vpc-resources)"
         )
         sys.exit(1)
 
+    # Set up logger
+    logger = setup_logger(args.repo)
+
     # Get GitHub token
     token = os.environ.get("GH_TOKEN")
     if not token:
-        print("❌ Error: GH_TOKEN environment variable not set")
+        logger.error("❌ Error: GH_TOKEN environment variable not set")
         sys.exit(1)
 
     workflow_file = args.workflow
     branch = args.branch
 
     # Create monitor instance
-    monitor = GitHubWorkflowMonitor(token, owner, repo)
+    monitor = GitHubWorkflowMonitor(token, owner, repo, logger)
 
     # Trigger the workflow
     if not monitor.trigger_workflow(workflow_file, branch):
         sys.exit(1)
 
     # Wait a moment for the run to be created
-    print("⏳ Waiting for workflow run to start...")
+    logger.info("⏳ Waiting for workflow run to start...")
     for attempt in range(12):  # Try for up to 2 minutes
         time.sleep(10)
         run = monitor.get_latest_run(workflow_file, minutes=3)
         if run:
             monitor.run_id = run["id"]
             monitor.run_url = run["html_url"]
-            print(f"✅ Found workflow run: {monitor.run_url}")
+            logger.info(f"✅ Found workflow run: {monitor.run_url}")
             break
 
     if not monitor.run_id:
-        print("❌ Failed to find the triggered workflow run")
+        logger.error("❌ Failed to find the triggered workflow run")
         sys.exit(1)
 
     # Monitor and approve deployments

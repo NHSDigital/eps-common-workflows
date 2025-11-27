@@ -32,6 +32,3 @@ test:
 
 build:
 	echo "Not implemented"
-
-run-all-release:
-	./scripts/run_all_release.sh 2>&1 | tee release_$(shell date +%Y%m%d_%H%M%S).log
