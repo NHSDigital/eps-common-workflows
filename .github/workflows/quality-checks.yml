@@ -193,6 +193,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+      - name: Run build if Makefile target exists
+        run: |
+          if grep -qE "^build:" "Makefile"; then
+            echo "build target exists in Makefile"
+            make build
+          else
+            echo "build target not found in Makefile"
+          fi
+
   # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
   cloudformation-validation:
     runs-on: ubuntu-22.04
