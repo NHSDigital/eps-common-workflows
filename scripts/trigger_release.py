@@ -134,46 +134,6 @@ class GitHubWorkflowMonitor:
             print(f"Response: {response.text}")
             return False
 
-    def extract_version_tag(self, jobs_data: Dict[Any, Any]) -> Optional[str]:
-        """Extract the version_tag output from the tag_release job."""
-        for job in jobs_data.get("jobs", []):
-            if job["name"] == "tag_release":
-                # Check if job has completed successfully
-                if job["conclusion"] == "success":
-                    # Try to get outputs from the job
-                    # (this may not be directly available)
-                    # We'll need to check the run details
-                    return self._get_job_outputs(job)
-        return None
-
-    def _get_job_outputs(self, job: Dict[Any, Any]) -> Optional[str]:
-        """Try to extract outputs from job steps."""
-        # GitHub API doesn't directly expose job outputs in the jobs endpoint
-        # We need to parse from the run outputs or job logs
-        # For now, we'll mark that we need to get this from the workflow
-        # run outputs
-        return None
-
-    def get_workflow_outputs(self, run_id: int) -> Optional[Dict[str, Any]]:
-        """Get workflow outputs (requires checking via runs endpoint)."""
-        # GitHub doesn't expose workflow outputs directly via API
-        # We'll need to infer from completed jobs or use alternate methods
-        jobs_data = self.get_run_jobs(run_id)
-        if not jobs_data:
-            return None
-
-        # Look for the tag_release job and check if we can find version info
-        for job in jobs_data.get("jobs", []):
-            if "tag_release" in job["name"].lower():
-                if job["conclusion"] == "success":
-                    # The version would be in the job outputs
-                    # Since API doesn't expose this directly, we'll
-                    # monitor job names that use the version (they
-                    # receive it as input from tag_release)
-                    return {"tag_release_completed": True}
-
-        return None
-
     def check_for_errors(
         self, run_details: Dict[Any, Any], jobs_data: Dict[Any, Any]
     ) -> Optional[str]:
