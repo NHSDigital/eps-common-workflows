@@ -409,4 +409,9 @@ jobs:
           path: cfn_guard_output
 
       - name: Build project
-        run: make build
+        run: |
+          if scripts/check_makefile_target.sh build; then
+            make build
+          else
+            echo "No build target found in Makefile, skipping build step"
+          fi
