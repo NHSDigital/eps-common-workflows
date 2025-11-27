@@ -407,3 +407,6 @@ jobs:
         with:
           name: cfn_guard_output
           path: cfn_guard_output
+
+      - name: Build project
+        run: make build
