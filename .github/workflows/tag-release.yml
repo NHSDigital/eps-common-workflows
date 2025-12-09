@@ -51,6 +51,9 @@ on:
             change_set_version:
                 description: "The change set version for deployments"
                 value: ${{ jobs.tag_release.outputs.change_set_version }}
+            next_version_tag:
+                description: "The next version tag that will be created"
+                value: ${{ jobs.tag_release.outputs.next_version_tag }}
         secrets:
             NPM_TOKEN:
                 required: false
@@ -173,6 +176,7 @@ jobs:
         outputs:
             version_tag: ${{steps.output_version_tag.outputs.VERSION_TAG}}
             change_set_version: ${{ steps.output_change_set_version.outputs.CHANGE_SET_VERSION }}
+            next_version_tag: ${{ steps.output_version_tag.outputs.NEXT_VERSION_TAG }}
         steps:
             - name: Fetch asdf artifact
               uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
@@ -251,11 +255,11 @@ jobs:
               if: ${{ inputs.extra_artifact_name != '' }}
               uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
               with:
-                artifact-ids: ${{ inputs.extra_artifact_id }}
-                github-token: ${{ secrets.GITHUB_TOKEN }}
-                repository: ${{ inputs.extra_artifact_repository }}
-                run-id: ${{ inputs.extra_artifact_run_id }}
-  
+                  artifact-ids: ${{ inputs.extra_artifact_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  repository: ${{ inputs.extra_artifact_repository }}
+                  run-id: ${{ inputs.extra_artifact_run_id }}
+
             - name: Set VERSION_TAG based on dry_run flag
               id: output_version_tag
               run: |
@@ -304,6 +308,7 @@ jobs:
                   fi
                   echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
                   echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_ENV"
+                  echo "NEXT_VERSION_TAG=${NEW_VERSION_TAG}" >> "$GITHUB_OUTPUT"
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   BRANCH_NAME: ${{ inputs.branch_name }}
