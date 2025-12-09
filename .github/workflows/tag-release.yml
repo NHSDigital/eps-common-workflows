@@ -157,6 +157,7 @@ jobs:
               with:
                   name: asdf_artifact
                   path: asdf.tar.gz
+                  overwrite: true
 
             - name: Prepare config artifact
               run: |
@@ -169,6 +170,7 @@ jobs:
               with:
                   name: config_artifact
                   path: config_artifact/
+                  overwrite: true
 
     tag_release:
         needs: install_semantic_release
