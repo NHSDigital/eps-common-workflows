@@ -159,7 +159,7 @@ jobs:
         run: make lint
 
       - name: actionlint
-        uses: raven-actions/actionlint@3a24062651993d40fed1019b58ac6fbdfbf276cc
+        uses: raven-actions/actionlint@963d4779ef039e217e5d0e6fd73ce9ab7764e493
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
