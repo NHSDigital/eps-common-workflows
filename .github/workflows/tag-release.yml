@@ -107,7 +107,7 @@ jobs:
 
             - name: Cache asdf artifact
               id: asdf_artifact_cache
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+              uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
               with:
                   path: asdf.tar.gz
                   key: ${{ steps.artifact_cache_key.outputs.key }}
@@ -116,7 +116,7 @@ jobs:
             - name: Cache asdf with installed npm packages
               if: ${{ steps.asdf_artifact_cache.outputs.cache-hit != 'true' }}
               id: installed_cache
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+              uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
               with:
                   path: ~/.asdf
                   key: ${{ steps.installed_cache_key.outputs.key }}
@@ -125,7 +125,7 @@ jobs:
             - name: Cache asdf
               if: ${{ steps.installed_cache.outcome == 'success' && steps.installed_cache.outputs.cache-hit != 'true' }}
               id: asdf_cache
-              uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+              uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
               with:
                   path: ~/.asdf
                   key: ${{ steps.asdf_cache_key.outputs.key }}
@@ -231,7 +231,7 @@ jobs:
 
             - name: Cache asdf
               if: ${{ inputs.publish_package }}
-              uses: actions/cache@v4
+              uses: actions/cache@v5
               with:
                   path: |
                       ~/.asdf
