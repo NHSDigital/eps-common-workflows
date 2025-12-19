@@ -181,7 +181,7 @@ jobs:
             next_version_tag: ${{ steps.output_version_tag.outputs.NEXT_VERSION_TAG }}
         steps:
             - name: Fetch asdf artifact
-              uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
               with:
                   name: asdf_artifact
             - name: Install asdf
@@ -225,7 +225,7 @@ jobs:
                   BRANCH_NAME: ${{ inputs.branch_name }}
 
             - name: Fetch semantic-release config
-              uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
               with:
                   name: config_artifact
 
@@ -255,7 +255,7 @@ jobs:
 
             - name: Download extra artifact
               if: ${{ inputs.extra_artifact_name != '' }}
-              uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
               with:
                   artifact-ids: ${{ inputs.extra_artifact_id }}
                   github-token: ${{ secrets.GITHUB_TOKEN }}
