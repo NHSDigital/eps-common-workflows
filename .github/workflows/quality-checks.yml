@@ -168,7 +168,10 @@ jobs:
             echo "****************"
             echo "uses_go=false" >> "$GITHUB_OUTPUT"
           fi
-
+          cat <<EOF > trivy.yaml
+          pkg:
+            include-dev-deps: true
+          EOF
       - name: Check python licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
@@ -181,6 +184,7 @@ jobs:
           output: "license_scan_python.json"
           exit-code: "1"
           list-all-pkgs: "true"
+          trivy-config: trivy.yaml
       - name: Check node licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
@@ -193,6 +197,7 @@ jobs:
           output: "license_scan_node.json"
           exit-code: "1"
           list-all-pkgs: "true"
+          trivy-config: trivy.yaml
       - name: Check go licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
@@ -205,6 +210,7 @@ jobs:
           output: "license_scan_go.json"
           exit-code: "1"
           list-all-pkgs: "true"
+          trivy-config: trivy.yaml
       - name: Check java licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
@@ -217,6 +223,7 @@ jobs:
           output: "license_scan_java.json"
           exit-code: "1"
           list-all-pkgs: "true"
+          trivy-config: trivy.yaml
       - name: Show license scan output
         if: always()
         run: |
@@ -262,6 +269,7 @@ jobs:
           format: "table"
           output: "dependency_results_python.txt"
           exit-code: "1"
+          trivy-config: trivy.yaml
       - name: Generate and check node SBOMs
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -273,6 +281,7 @@ jobs:
           format: "table"
           output: "dependency_results_node.txt"
           exit-code: "1"
+          trivy-config: trivy.yaml
       - name: Generate and check java SBOMs
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -295,6 +304,7 @@ jobs:
           format: "table"
           output: "dependency_results_go.txt"
           exit-code: "1"
+          trivy-config: trivy.yaml
       - name: Show scan output
         if: always()
         run: |
