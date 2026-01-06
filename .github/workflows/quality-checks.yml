@@ -249,68 +249,57 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Generate and check python SBOMs
+      - name: Generate and check SBOMs
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
-          scan-ref: "poetry.lock"
+          scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "vuln"
           format: "table"
-          output: "dependency_results_python.txt"
+          output: "dependency_results.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
-      - name: Generate and check node SBOMs
-        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        with:
-          scan-type: "fs"
-          scan-ref: "package-lock.json"
-          severity: "CRITICAL,HIGH"
-          scanners: "vuln"
-          format: "table"
-          output: "dependency_results_node.txt"
-          exit-code: "1"
-          trivy-config: trivy.yaml
-      - name: Generate and check java SBOMs
-        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        with:
-          scan-type: "fs"
-          scan-ref: "pom.xml"
-          severity: "CRITICAL,HIGH"
-          scanners: "vuln"
-          format: "table"
-          output: "dependency_results_java.txt"
-          exit-code: "1"
-      - name: Generate and check golang SBOMs
-        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        with:
-          scan-type: "fs"
-          scan-ref: "src/go.mod"
-          severity: "CRITICAL,HIGH"
-          scanners: "vuln"
-          format: "table"
-          output: "dependency_results_go.txt"
-          exit-code: "1"
-          trivy-config: trivy.yaml
+      # - name: Generate and check node SBOMs
+      #   if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+      #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+      #   with:
+      #     scan-type: "fs"
+      #     scan-ref: "package-lock.json"
+      #     severity: "CRITICAL,HIGH"
+      #     scanners: "vuln"
+      #     format: "table"
+      #     output: "dependency_results_node.txt"
+      #     exit-code: "1"
+      #     trivy-config: trivy.yaml
+      # - name: Generate and check java SBOMs
+      #   if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+      #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+      #   with:
+      #     scan-type: "fs"
+      #     scan-ref: "pom.xml"
+      #     severity: "CRITICAL,HIGH"
+      #     scanners: "vuln"
+      #     format: "table"
+      #     output: "dependency_results_java.txt"
+      #     exit-code: "1"
+      # - name: Generate and check golang SBOMs
+      #   if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+      #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+      #   with:
+      #     scan-type: "fs"
+      #     scan-ref: "src/go.mod"
+      #     severity: "CRITICAL,HIGH"
+      #     scanners: "vuln"
+      #     format: "table"
+      #     output: "dependency_results_go.txt"
+      #     exit-code: "1"
+      #     trivy-config: trivy.yaml
       - name: Show scan output
         if: always()
         run: |
-          if [ -f dependency_results_python.txt ]; then
-            cat dependency_results_python.txt
-          fi
-          if [ -f dependency_results_node.txt ]; then
-            cat dependency_results_node.txt
-          fi
-          if [ -f dependency_results_java.txt ]; then
-            cat dependency_results_java.txt
-          fi
-          if [ -f dependency_results_go.txt ]; then
-            cat dependency_results_go.txt
-          fi
+          cat dependency_results.txt
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
