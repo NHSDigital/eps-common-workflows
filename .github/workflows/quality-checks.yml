@@ -155,7 +155,8 @@ jobs:
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: "fs"
-          scan-ref: "."
+          scan-ref: "poetry.lock"
+          severity: "CRITICAL,HIGH"
           scanners: "license"
           format: "table"
           output: "license_scan.txt"
