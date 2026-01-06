@@ -194,7 +194,7 @@ jobs:
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
         env:
-          TRIVY_VENV_DIR: ".venv"
+          TRIVY_VENV_DIR: "./.venv/"
       - name: remove requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         run: |
