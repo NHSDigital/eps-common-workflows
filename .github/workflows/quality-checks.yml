@@ -180,10 +180,10 @@ jobs:
           scan-ref: "poetry.lock"
           severity: "CRITICAL,HIGH"
           scanners: "license"
-          format: "json"
-          output: "license_scan_python.json"
+          format: "table"
+          output: "license_scan_python.txt"
           exit-code: "1"
-          list-all-pkgs: "true"
+          list-all-pkgs: "false"
           trivy-config: trivy.yaml
       - name: Check node licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -193,10 +193,10 @@ jobs:
           scan-ref: "package-lock.json"
           severity: "CRITICAL,HIGH"
           scanners: "license"
-          format: "json"
-          output: "license_scan_node.json"
+          format: "table"
+          output: "license_scan_node.txt"
           exit-code: "1"
-          list-all-pkgs: "true"
+          list-all-pkgs: "false"
           trivy-config: trivy.yaml
       - name: Check go licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -206,10 +206,10 @@ jobs:
           scan-ref: "go.sum"
           severity: "CRITICAL,HIGH"
           scanners: "license"
-          format: "json"
-          output: "license_scan_go.json"
+          format: "table"
+          output: "license_scan_go.txt"
           exit-code: "1"
-          list-all-pkgs: "true"
+          list-all-pkgs: "false"
           trivy-config: trivy.yaml
       - name: Check java licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -219,25 +219,25 @@ jobs:
           scan-ref: "pom.xml"
           severity: "CRITICAL,HIGH"
           scanners: "license"
-          format: "json"
-          output: "license_scan_java.json"
+          format: "table"
+          output: "license_scan_java.txt"
           exit-code: "1"
-          list-all-pkgs: "true"
+          list-all-pkgs: "false"
           trivy-config: trivy.yaml
       - name: Show license scan output
         if: always()
         run: |
-          if [ -f license_scan_python.json ]; then
-            cat license_scan_python.json
+          if [ -f license_scan_python.txt ]; then
+            cat license_scan_python.txt
           fi
-          if [ -f license_scan_node.json ]; then
-            cat license_scan_node.json
+          if [ -f license_scan_node.txt ]; then
+            cat license_scan_node.txt
           fi
-          if [ -f license_scan_go.json ]; then
-            cat license_scan_go.json
+          if [ -f license_scan_go.txt ]; then
+            cat license_scan_go.txt
           fi
-          if [ -f license_scan_java.json ]; then
-            cat license_scan_java.json
+          if [ -f license_scan_java.txt ]; then
+            cat license_scan_java.txt
           fi
 
       - name: Run code lint
