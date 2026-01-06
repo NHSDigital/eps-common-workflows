@@ -126,7 +126,7 @@ jobs:
         run: |
           if [ -f "pyproject.toml" ] && grep -q '\[tool.poetry\]' "pyproject.toml"; then
             echo "****************"
-            echo "Project uses poetry"
+            echo "Detected a poetry project"
             echo "****************"
             echo "uses_poetry=true" >> "$GITHUB_OUTPUT"
           else
@@ -220,10 +220,10 @@ jobs:
       - name: Show license scan output
         if: always()
         run: |
-          cat license_scan_python.json
-          cat license_scan_node.json
-          cat license_scan_go.json
-          cat license_scan_java.json
+          [ -f license_scan_python.json ] && cat license_scan_python.json
+          [ -f license_scan_node.json ] && cat license_scan_node.json
+          [ -f license_scan_go.json ] && cat license_scan_go.json
+          [ -f license_scan_java.json ] && cat license_scan_java.json
 
       - name: Run code lint
         run: make lint
@@ -290,10 +290,10 @@ jobs:
       - name: Show scan output
         if: always()
         run: |
-          cat dependency_results_python.txt
-          cat dependency_results_node.txt
-          cat dependency_results_java.txt
-          cat dependency_results_go.txt
+          [ -f dependency_results_python.txt ] && cat dependency_results_python.txt
+          [ -f dependency_results_node.txt ] && cat dependency_results_node.txt
+          [ -f dependency_results_java.txt ] && cat dependency_results_java.txt
+          [ -f dependency_results_go.txt ] && cat dependency_results_go.txt
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
