@@ -176,6 +176,7 @@ jobs:
       - name: convert python dependencies to requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         run: |
+          poetry self add poetry-plugin-export
           poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
           cat requirements.txt
       - name: Check python licenses
