@@ -174,7 +174,14 @@ jobs:
         run: make test
 
       - name: Generate and check SBOMs
-        uses: NHSDigital/eps-action-sbom@7684ce6314e515df7b7929fac08b4464f8a03d06
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          format: "table"
+          output: "dependency-results.txt"
+          exit-code: "1"
 
       - name: "check is SONAR_TOKEN exists"
         env:
