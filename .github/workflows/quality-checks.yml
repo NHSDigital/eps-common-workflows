@@ -193,6 +193,8 @@ jobs:
           exit-code: "1"
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
+        env:
+          VENV_DIR: ".venv"
       - name: remove requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         run: |
