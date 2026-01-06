@@ -155,16 +155,16 @@ jobs:
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: "fs"
-          scan-ref: "poetry.lock"
+          scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "license"
-          format: "table"
-          output: "license_scan.txt"
+          format: "json"
+          output: "license_scan.json"
           exit-code: "1"
           list-all-pkgs: "true"
       - name: Show license scan output
         if: always()
-        run: cat license_scan.txt
+        run: cat license_scan.json
 
       - name: Run code lint
         run: make lint
