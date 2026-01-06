@@ -168,11 +168,11 @@ jobs:
             echo "****************"
             echo "uses_go=false" >> "$GITHUB_OUTPUT"
           fi
-          # Create trivy config to include dev dependencies
-          cat <<EOF >> trivy.yaml
-          pkg:
-            include-dev-deps: true
-          EOF
+          touch trivy.yaml
+      - name: Update trivy config to include dev dependencies
+        uses: mikefarah/yq@065b200af9851db0d5132f50bc10b1406ea5c0a8
+        with:
+          cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
       - name: Check python licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
