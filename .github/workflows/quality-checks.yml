@@ -220,10 +220,18 @@ jobs:
       - name: Show license scan output
         if: always()
         run: |
-          [ -f license_scan_python.json ] && cat license_scan_python.json
-          [ -f license_scan_node.json ] && cat license_scan_node.json
-          [ -f license_scan_go.json ] && cat license_scan_go.json
-          [ -f license_scan_java.json ] && cat license_scan_java.json
+          if [ -f license_scan_python.json ]; then
+            cat license_scan_python.json
+          fi
+          if [ -f license_scan_node.json ]; then
+            cat license_scan_node.json
+          fi
+          if [ -f license_scan_go.json ]; then
+            cat license_scan_go.json
+          fi
+          if [ -f license_scan_java.json ]; then
+            cat license_scan_java.json
+          fi
 
       - name: Run code lint
         run: make lint
@@ -290,10 +298,18 @@ jobs:
       - name: Show scan output
         if: always()
         run: |
-          [ -f dependency_results_python.txt ] && cat dependency_results_python.txt
-          [ -f dependency_results_node.txt ] && cat dependency_results_node.txt
-          [ -f dependency_results_java.txt ] && cat dependency_results_java.txt
-          [ -f dependency_results_go.txt ] && cat dependency_results_go.txt
+          if [ -f dependency_results_python.txt ]; then
+            cat dependency_results_python.txt
+          fi
+          if [ -f dependency_results_node.txt ]; then
+            cat dependency_results_node.txt
+          fi
+          if [ -f dependency_results_java.txt ]; then
+            cat dependency_results_java.txt
+          fi
+          if [ -f dependency_results_go.txt ]; then
+            cat dependency_results_go.txt
+          fi
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
