@@ -186,7 +186,7 @@ jobs:
           exit-code: "1"
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
-          version: "0.68.2"
+          version: "v0.68.2"
       # - name: Check node licenses
       #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
       #   if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
