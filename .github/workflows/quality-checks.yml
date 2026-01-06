@@ -121,8 +121,8 @@ jobs:
         run: |
           make install
 
-      - name: Check if project uses Poetry
-        id: check_poetry
+      - name: Check language tools used
+        id: check_languages
         run: |
           if [ -f "pyproject.toml" ] && grep -q '\[tool.poetry\]' "pyproject.toml"; then
             echo "****************"
@@ -135,10 +135,6 @@ jobs:
             echo "****************"
             echo "uses_poetry=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Check if project uses Java
-        id: check_java
-        run: |
           if [ -f pom.xml ]; then
             echo "****************"
             echo "Detected a Java project"
@@ -150,21 +146,84 @@ jobs:
             echo "****************"
             echo "uses_java=false" >> "$GITHUB_OUTPUT"
           fi
+          if [ -f package-lock.json ]; then
+            echo "****************"
+            echo "Detected a Node.js project"
+            echo "****************"
+            echo "uses_node=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Node.js"
+            echo "****************"
+            echo "uses_node=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f go.sum ]; then
+            echo "****************"
+            echo "Detected a Go project"
+            echo "****************"
+            echo "uses_go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Go"
+            echo "****************"
+            echo "uses_go=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Check licenses
-        uses: aquasecurity/trivy-action@0.33.1
+      - name: Check python licenses
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         with:
           scan-type: "fs"
-          scan-ref: "."
+          scan-ref: "poetry.lock"
           severity: "CRITICAL,HIGH"
           scanners: "license"
           format: "json"
-          output: "license_scan.json"
+          output: "license_scan_python.json"
+          exit-code: "1"
+          list-all-pkgs: "true"
+      - name: Check node licenses
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        with:
+          scan-type: "fs"
+          scan-ref: "package-lock.json"
+          severity: "CRITICAL,HIGH"
+          scanners: "license"
+          format: "json"
+          output: "license_scan_node.json"
+          exit-code: "1"
+          list-all-pkgs: "true"
+      - name: Check go licenses
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        with:
+          scan-type: "fs"
+          scan-ref: "go.sum"
+          severity: "CRITICAL,HIGH"
+          scanners: "license"
+          format: "json"
+          output: "license_scan_go.json"
+          exit-code: "1"
+          list-all-pkgs: "true"
+      - name: Check java licenses
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        with:
+          scan-type: "fs"
+          scan-ref: "pom.xml"
+          severity: "CRITICAL,HIGH"
+          scanners: "license"
+          format: "json"
+          output: "license_scan_java.json"
           exit-code: "1"
           list-all-pkgs: "true"
       - name: Show license scan output
         if: always()
-        run: cat license_scan.json
+        run: |
+          cat license_scan_python.json
+          cat license_scan_node.json
+          cat license_scan_go.json
+          cat license_scan_java.json
 
       - name: Run code lint
         run: make lint
@@ -185,8 +244,8 @@ jobs:
         run: make test
 
       - name: Generate and check python SBOMs
-        if: ${{ steps.check_poetry.outputs.uses_poetry == 'true' }}
-        uses: aquasecurity/trivy-action@0.33.1
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
           scan-ref: "poetry.lock"
@@ -195,9 +254,46 @@ jobs:
           format: "table"
           output: "dependency_results_python.txt"
           exit-code: "1"
+      - name: Generate and check node SBOMs
+        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          scan-ref: "package-lock.json"
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_node.txt"
+          exit-code: "1"
+      - name: Generate and check java SBOMs
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          scan-ref: "pom.xml"
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_java.txt"
+          exit-code: "1"
+      - name: Generate and check golang SBOMs
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          scan-ref: "go.sum"
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_go.txt"
+          exit-code: "1"
       - name: Show scan output
         if: always()
-        run: cat dependency_results_python.txt
+        run: |
+          cat dependency_results_python.txt
+          cat dependency_results_node.txt
+          cat dependency_results_java.txt
+          cat dependency_results_go.txt
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
@@ -205,12 +301,12 @@ jobs:
         run: echo "SONAR_TOKEN_EXISTS=true" >> "$GITHUB_ENV"
 
       - name: Run SonarQube analysis
-        if: ${{ steps.check_java.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
         run: mvn sonar:sonar -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
-        if: ${{ steps.check_java.outputs.uses_java == 'false' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_java == 'false' && env.SONAR_TOKEN_EXISTS == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
