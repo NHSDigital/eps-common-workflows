@@ -157,7 +157,7 @@ jobs:
             echo "****************"
             echo "uses_node=false" >> "$GITHUB_OUTPUT"
           fi
-          if [ -f go.sum ]; then
+          if [ -f src/go.sum ]; then
             echo "****************"
             echo "Detected a Go project"
             echo "****************"
@@ -168,7 +168,7 @@ jobs:
             echo "****************"
             echo "uses_go=false" >> "$GITHUB_OUTPUT"
           fi
-          cat <<EOF > trivy.yaml
+          cat <<EOF >> trivy.yaml
           pkg:
             include-dev-deps: true
           EOF
@@ -203,7 +203,7 @@ jobs:
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
         with:
           scan-type: "fs"
-          scan-ref: "go.sum"
+          scan-ref: "src/go.sum"
           severity: "CRITICAL,HIGH"
           scanners: "license"
           format: "table"
@@ -298,7 +298,7 @@ jobs:
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
-          scan-ref: "go.sum"
+          scan-ref: "src/go.sum"
           severity: "CRITICAL,HIGH"
           scanners: "vuln"
           format: "table"
