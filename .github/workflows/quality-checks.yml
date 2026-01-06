@@ -191,7 +191,7 @@ jobs:
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         with:
           scan-type: "fs"
-          skip-files: "**/poetry.lock,**/go.sum,**/pom.xml,**/package-lock.json"
+          skip-files: "**/poetry.lock,**/go.mod,**/pom.xml,**/package-lock.json"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "license"
@@ -211,7 +211,7 @@ jobs:
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
         with:
           scan-type: "fs"
-          skip-files: "**/poetry.lock,**/go.sum,**/pom.xml"
+          skip-files: "**/poetry.lock,**/go.mod,**/pom.xml"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "license"
@@ -220,6 +220,11 @@ jobs:
           exit-code: "1"
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
+      - name: download go dependencies
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        run: |
+          cd src
+          go mod vendor
       - name: Check go licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
@@ -234,12 +239,17 @@ jobs:
           exit-code: "1"
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
+      - name: clean go dependencies
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        run: |
+          cd src
+          rm -rf vendor
       - name: Check java licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
         with:
           scan-type: "fs"
-          skip-files: "**/poetry.lock,**/package-lock.json,**/go.sum"
+          skip-files: "**/poetry.lock,**/package-lock.json,**/go.mod"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "license"
@@ -287,7 +297,7 @@ jobs:
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
-          skip-files: "**/package-lock.json,**/go.sum,**/pom.xml"
+          skip-files: "**/package-lock.json,**/go.mod,**/pom.xml"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "vuln"
@@ -300,7 +310,7 @@ jobs:
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
-          skip-files: "**/poetry.lock,**/go.sum,**/pom.xml"
+          skip-files: "**/poetry.lock,**/go.mod,**/pom.xml"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "vuln"
@@ -325,7 +335,7 @@ jobs:
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
-          skip-files: "**/poetry.lock,**/package-lock.json,**/go.sum"
+          skip-files: "**/poetry.lock,**/package-lock.json,**/go.mod"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "vuln"
