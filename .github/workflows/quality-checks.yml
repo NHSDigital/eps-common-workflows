@@ -121,7 +121,7 @@ jobs:
         run: |
           make install
 
-      - name: Check language tools used
+      - name: Check language tools used and setup trivy config
         id: check_languages
         run: |
           if [ -f "pyproject.toml" ] && grep -q '\[tool.poetry\]' "pyproject.toml"; then
@@ -168,77 +168,68 @@ jobs:
             echo "****************"
             echo "uses_go=false" >> "$GITHUB_OUTPUT"
           fi
+          # Create trivy config to include dev dependencies
           cat <<EOF >> trivy.yaml
           pkg:
             include-dev-deps: true
           EOF
-      - name: Check python licenses
+      - name: Check licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         with:
           scan-type: "fs"
-          scan-ref: "poetry.lock"
+          scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "license"
           format: "table"
-          output: "license_scan_python.txt"
+          output: "license_scan.txt"
           exit-code: "1"
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
-      - name: Check node licenses
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
-        with:
-          scan-type: "fs"
-          scan-ref: "package-lock.json"
-          severity: "CRITICAL,HIGH"
-          scanners: "license"
-          format: "table"
-          output: "license_scan_node.txt"
-          exit-code: "1"
-          list-all-pkgs: "false"
-          trivy-config: trivy.yaml
-      - name: Check go licenses
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        with:
-          scan-type: "fs"
-          scan-ref: "src/go.mod"
-          severity: "CRITICAL,HIGH"
-          scanners: "license"
-          format: "table"
-          output: "license_scan_go.txt"
-          exit-code: "1"
-          list-all-pkgs: "false"
-          trivy-config: trivy.yaml
-      - name: Check java licenses
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
-        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
-        with:
-          scan-type: "fs"
-          scan-ref: "pom.xml"
-          severity: "CRITICAL,HIGH"
-          scanners: "license"
-          format: "table"
-          output: "license_scan_java.txt"
-          exit-code: "1"
-          list-all-pkgs: "false"
-          trivy-config: trivy.yaml
+          version: "0.68.2"
+      # - name: Check node licenses
+      #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+      #   if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+      #   with:
+      #     scan-type: "fs"
+      #     scan-ref: "package-lock.json"
+      #     severity: "CRITICAL,HIGH"
+      #     scanners: "license"
+      #     format: "table"
+      #     output: "license_scan_node.txt"
+      #     exit-code: "1"
+      #     list-all-pkgs: "false"
+      #     trivy-config: trivy.yaml
+      # - name: Check go licenses
+      #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+      #   if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+      #   with:
+      #     scan-type: "fs"
+      #     scan-ref: "src/go.mod"
+      #     severity: "CRITICAL,HIGH"
+      #     scanners: "license"
+      #     format: "table"
+      #     output: "license_scan_go.txt"
+      #     exit-code: "1"
+      #     list-all-pkgs: "false"
+      #     trivy-config: trivy.yaml
+      # - name: Check java licenses
+      #   uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+      #   if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+      #   with:
+      #     scan-type: "fs"
+      #     scan-ref: "pom.xml"
+      #     severity: "CRITICAL,HIGH"
+      #     scanners: "license"
+      #     format: "table"
+      #     output: "license_scan_java.txt"
+      #     exit-code: "1"
+      #     list-all-pkgs: "false"
+      #     trivy-config: trivy.yaml
       - name: Show license scan output
         if: always()
         run: |
-          if [ -f license_scan_python.txt ]; then
-            cat license_scan_python.txt
-          fi
-          if [ -f license_scan_node.txt ]; then
-            cat license_scan_node.txt
-          fi
-          if [ -f license_scan_go.txt ]; then
-            cat license_scan_go.txt
-          fi
-          if [ -f license_scan_java.txt ]; then
-            cat license_scan_java.txt
-          fi
+          cat license_scan.txt
 
       - name: Run code lint
         run: make lint
