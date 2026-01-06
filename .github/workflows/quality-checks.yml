@@ -173,12 +173,17 @@ jobs:
         uses: mikefarah/yq@065b200af9851db0d5132f50bc10b1406ea5c0a8
         with:
           cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
+      - name: convert python dependencies to requirements.txt
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        run: |
+          poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
+          cat requirements.txt
       - name: Check python licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         with:
           scan-type: "fs"
-          skip-files: "**/package-lock.json,**/go.sum,**/pom.xml"
+          skip-files: "**/package-lock.json,**/go.sum,**/pom.xml,**/poetry.lock"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
           scanners: "license"
@@ -187,6 +192,10 @@ jobs:
           exit-code: "1"
           list-all-pkgs: "false"
           trivy-config: trivy.yaml
+      - name: remove requirements.txt
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        run: |
+          rm -f requirements.txt
       - name: Check node licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
