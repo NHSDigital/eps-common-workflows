@@ -161,6 +161,7 @@ jobs:
           format: "table"
           output: "license_scan.txt"
           exit-code: "1"
+          list-all-pkgs: "true"
       - name: Show license scan output
         if: always()
         run: cat license_scan.txt
