@@ -309,7 +309,7 @@ jobs:
           exit-code: "1"
           trivy-config: trivy.yaml
       - name: Generate and check go SBOMs
-        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
@@ -321,7 +321,7 @@ jobs:
           output: "dependency_results_go.txt"
           exit-code: "1"
       - name: Generate and check java SBOMs
-        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
           scan-type: "fs"
@@ -330,7 +330,7 @@ jobs:
           severity: "CRITICAL,HIGH"
           scanners: "vuln"
           format: "table"
-          output: "dependency_results_go.txt"
+          output: "dependency_results_java.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
       - name: Show scan output
