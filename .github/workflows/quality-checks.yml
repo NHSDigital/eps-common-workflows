@@ -186,19 +186,20 @@ jobs:
               echo "Poetry version $POETRY_VERSION is outside the required range so not installing plugin-export"
           fi
           poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
-          cat requirements.txt
       - name: Check python licenses
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        run: |
-          trivy fs \
-            --skip-files "**/package-lock.json,**/go.sum,**/pom.xml" \
-            --severity CRITICAL,HIGH \
-            --scanners license \
-            --format table \
-            --output license_scan_python.txt \
-            --exit-code 1 \
-            --config trivy.yaml \
-            .
+        with:
+          scan-type: "fs"
+          skip-files: "**/poetry.lock,**/go.sum,**/pom.xml,**/package-lock.json"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          scanners: "license"
+          format: "table"
+          output: "license_scan_python.txt"
+          exit-code: "1"
+          list-all-pkgs: "false"
+          trivy-config: trivy.yaml
         env:
           VIRTUAL_ENV: "./.venv/"
       - name: remove requirements.txt
