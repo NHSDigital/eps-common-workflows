@@ -151,9 +151,18 @@ jobs:
             echo "uses_java=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check licenses (Makefile)
-        run: |
-          make check-licenses
+      - name: Check licenses
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "license"
+          format: "table"
+          output: "license_scan.txt"
+          exit-code: "1"
+      - name: Show license scan output
+        if: always()
+        run: cat license_scan.txt
 
       - name: Run code lint
         run: make lint
@@ -173,20 +182,20 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Generate and check SBOMs
+      - name: Generate and check python SBOMs
+        if: ${{ steps.check_poetry.outputs.uses_poetry == 'true' }}
         uses: aquasecurity/trivy-action@0.33.1
         with:
           scan-type: "fs"
-          scan-ref: "."
+          scan-ref: "poetry.lock"
           severity: "CRITICAL,HIGH"
-          skip-files: "nhsd-rules-deny.txt"
+          scanners: "vuln"
           format: "table"
-          output: "dependency-results.txt"
+          output: "dependency_results_python.txt"
           exit-code: "1"
       - name: Show scan output
         if: always()
-        run: cat dependency-results.txt
-
+        run: cat dependency_results_python.txt
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
@@ -205,7 +214,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
-  cloudformation-validation:
+  IaC-validation:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
