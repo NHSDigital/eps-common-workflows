@@ -179,11 +179,12 @@ jobs:
           scan-type: "fs"
           scan-ref: "."
           severity: "CRITICAL,HIGH"
+          skip-files: "nhsd-rules-deny.txt"
           format: "table"
           output: "dependency-results.txt"
           exit-code: "1"
       - name: Show scan output
-        if: failure()
+        if: always()
         run: cat dependency-results.txt
 
       - name: "check is SONAR_TOKEN exists"
