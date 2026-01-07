@@ -245,14 +245,14 @@ jobs:
           scan-ref: "."
           scanners: "vuln"
           format: "spdx-json"
-          output: "sbom.cdx.json"
+          output: "sbom.spdx.json"
           exit-code: "0"
           trivy-config: trivy.yaml
       - name: Upload sbom
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
-          name: sbom.cdx.json
-          path: sbom.cdx.json
+          name: sbom.spdx.json
+          path: sbom.spdx.json
 
       - name: Check python vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
