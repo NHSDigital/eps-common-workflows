@@ -238,7 +238,23 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Generate and check python SBOMs
+      - name: Generate SBOM
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "vuln"
+          format: "spdx-json"
+          output: "sbom.cdx.json"
+          exit-code: "0"
+          trivy-config: trivy.yaml
+      - name: Upload sbom
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: sbom.cdx.json
+          path: sbom.cdx.json
+
+      - name: Check python vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -251,7 +267,7 @@ jobs:
           output: "dependency_results_python.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
-      - name: Generate and check node SBOMs
+      - name: Check node vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -264,7 +280,7 @@ jobs:
           output: "dependency_results_node.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
-      - name: Generate and check go SBOMs
+      - name: Check go vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -276,7 +292,7 @@ jobs:
           format: "table"
           output: "dependency_results_go.txt"
           exit-code: "1"
-      - name: Generate and check java SBOMs
+      - name: Check java vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -289,7 +305,7 @@ jobs:
           output: "dependency_results_java.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
-      - name: Show scan output
+      - name: Show vulnerability output
         if: always()
         run: |
           if [ -f dependency_results_python.txt ]; then
