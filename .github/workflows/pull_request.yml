@@ -8,6 +8,45 @@ env:
   BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
 
 jobs:
+  get_issue_number_and_commit_id:
+    runs-on: ubuntu-22.04
+    outputs:
+      issue_number: ${{ steps.get_issue_number.outputs.result }}
+      version: ${{ steps.get_issue_number.outputs.version_number }}
+      commit_id: ${{ steps.commit_id.outputs.commit_id }}
+      sha_short: ${{ steps.commit_id.outputs.sha_short }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+
+      - uses: actions/github-script@v8
+        name: get issue number
+        id: get_issue_number
+        with:
+          script: |
+            if (context.issue.number) {
+              // Return issue number if present
+              return context.issue.number;
+            } else {
+              // Otherwise return issue number from commit
+              return (
+                await github.rest.repos.listPullRequestsAssociatedWithCommit({
+                  commit_sha: context.sha,
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                })
+              ).data[0].number;
+            }
+          result-encoding: string
+      - name: Get Commit ID
+        id: commit_id
+        run: |
+          #  echo "commit_id=${{ github.sha }}" >> "$GITHUB_ENV"
+          echo "commit_id=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          echo "sha_short=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
   dependabot-auto-approve-and-merge:
     needs: quality_checks
     uses: ./.github/workflows/dependabot-auto-approve-and-merge.yml
@@ -35,11 +74,35 @@ jobs:
           echo "TAG_FORMAT=$TAG_FORMAT" >> "$GITHUB_OUTPUT"
   quality_checks:
     uses: ./.github/workflows/quality-checks.yml
-    needs: [get_asdf_version]
+    needs: [get_asdf_version, get_issue_number_and_commit_id]
     with:
       asdfVersion: ${{ needs.get_asdf_version.outputs.asdf_version }}
+      dev_container_ecr: dev-container-common-workflows
+      dev_container_image_tag: PR-${{ needs.get_issue_number_and_commit_id.outputs.issue_number }}-${{ needs.get_issue_number_and_commit_id.outputs.sha_short }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
+
+  build_nhsd_git_secrets:
+    uses: ./.github/workflows/build_and_push_docker_image.yml
+    needs: [get_asdf_version, get_issue_number_and_commit_id]
+    with:
+      container_ecr: git-secrets
+      container_image_tag: PR-${{ needs.get_issue_number_and_commit_id.outputs.issue_number }}-${{ needs.get_issue_number_and_commit_id.outputs.sha_short }}-nhsd-git-secrets
+      docker_file: dockerfiles/nhsd-git-secrets.dockerfile
+    secrets:
+      PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
+
+  publish_nhsd_git_secrets_to_github:
+    needs:
+      [get_asdf_version, get_issue_number_and_commit_id, build_nhsd_git_secrets]
+    uses: ./.github/workflows/publish_nhsd_git_secrets_to_github.yml
+    with:
+      ecr_name: git-secrets
+      container_image_tag: PR-${{ needs.get_issue_number_and_commit_id.outputs.issue_number }}-${{ needs.get_issue_number_and_commit_id.outputs.sha_short }}-nhsd-git-secrets
+    secrets:
+      PUSH_IMAGE_ROLE: ${{ secrets.DEV_CONTAINER_PUSH_IMAGE_ROLE }}
+
   tag_release:
     needs: [quality_checks, get_asdf_version]
     uses: ./.github/workflows/tag-release.yml
