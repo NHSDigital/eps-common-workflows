@@ -1,7 +1,8 @@
 token: ?"?\$\{\{\s*secrets\.GITHUB_TOKEN\s*\}\}"?
 .*\.gitallowed.*
 id-token: write
-def __init__\(self, token: str, owner: str, repo: str
-token = os.environ\.get\("GH_TOKEN"\)
+password: \${{ secrets\.GITHUB_TOKEN }}
+def __init__\(self, token: str, owner: str, repo: str.*
 self\.token = token
-password: \${{ secrets.GITHUB_TOKEN }}
+token = os\.environ\.get\(\"GH_TOKEN\"\)
+poetry\.lock

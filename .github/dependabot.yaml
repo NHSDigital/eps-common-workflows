@@ -7,7 +7,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "friday"
+      day: "thursday"
       time: "18:00" # UTC
     open-pull-requests-limit: 20
     commit-message:
@@ -20,7 +20,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "friday"
+      day: "thursday"
       time: "18:00" # UTC
     open-pull-requests-limit: 20
     versioning-strategy: increase
@@ -34,7 +34,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "friday"
+      day: "thursday"
       time: "18:00" # UTC
     open-pull-requests-limit: 20
     versioning-strategy: increase

@@ -28,14 +28,14 @@ jobs:
   quality_checks:
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165
+      - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
         if: ${{ inputs.install_java }}
         with:
           java-version: "21"
           distribution: "corretto"
 
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
@@ -79,7 +79,7 @@ jobs:
           asdf_version: ${{ inputs.asdfVersion }}
 
       - name: Cache asdf
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           path: |
             ~/.asdf
@@ -110,7 +110,7 @@ jobs:
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
       - name: Cache npm dependencies
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           path: ./node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -121,12 +121,12 @@ jobs:
         run: |
           make install
 
-      - name: Check if project uses Poetry
-        id: check_poetry
+      - name: Check language tools used and setup trivy config
+        id: check_languages
         run: |
           if [ -f "pyproject.toml" ] && grep -q '\[tool.poetry\]' "pyproject.toml"; then
             echo "****************"
-            echo "Project uses poetry"
+            echo "Detected a poetry project"
             echo "****************"
             echo "uses_poetry=true" >> "$GITHUB_OUTPUT"
           else
@@ -135,10 +135,6 @@ jobs:
             echo "****************"
             echo "uses_poetry=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Check if project uses Java
-        id: check_java
-        run: |
           if [ -f pom.xml ]; then
             echo "****************"
             echo "Detected a Java project"
@@ -150,16 +146,85 @@ jobs:
             echo "****************"
             echo "uses_java=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Check licenses (Makefile)
+          if [ -f package-lock.json ]; then
+            echo "****************"
+            echo "Detected a Node.js project"
+            echo "****************"
+            echo "uses_node=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Node.js"
+            echo "****************"
+            echo "uses_node=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f src/go.sum ]; then
+            echo "****************"
+            echo "Detected a Go project"
+            echo "****************"
+            echo "uses_go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Go"
+            echo "****************"
+            echo "uses_go=false" >> "$GITHUB_OUTPUT"
+          fi
+          touch trivy.yaml
+      - name: Update trivy config to include dev dependencies
+        uses: mikefarah/yq@065b200af9851db0d5132f50bc10b1406ea5c0a8
+        with:
+          cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
+      - name: convert python dependencies to requirements.txt
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         run: |
-          make check-licenses
+          POETRY_VERSION=$(poetry --version | awk '{print $3}')
 
+          if [[ "$(printf '%s\n' "2.0.0" "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "2.0.0" ]] \
+            && [[ "$(printf '%s\n' "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "$POETRY_VERSION" ]]; then
+              echo "Poetry version $POETRY_VERSION is >=2.0.0 and <3.0.0 - installing plugin-export"
+              poetry self add poetry-plugin-export
+          else
+              echo "Poetry version $POETRY_VERSION is outside the required range so not installing plugin-export"
+          fi
+          poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
+      - name: download go dependencies
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        run: |
+          cd src
+          go mod vendor
+      - name: Check licenses
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          scanners: "license"
+          format: "table"
+          output: "license_scan.txt"
+          exit-code: "1"
+          list-all-pkgs: "false"
+          trivy-config: trivy.yaml
+        env:
+          VIRTUAL_ENV: "./.venv/"
+      - name: remove requirements.txt
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        run: |
+          rm -f requirements.txt
+      - name: clean go dependencies
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        run: |
+          cd src
+          rm -rf vendor
+      - name: Show license scan output
+        if: always()
+        run: |
+          if [ -f license_scan.txt ]; then
+            cat license_scan.txt
+          fi
       - name: Run code lint
         run: make lint
 
       - name: actionlint
-        uses: raven-actions/actionlint@3a24062651993d40fed1019b58ac6fbdfbf276cc
+        uses: raven-actions/actionlint@963d4779ef039e217e5d0e6fd73ce9ab7764e493
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
@@ -173,9 +238,88 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Generate and check SBOMs
-        uses: NHSDigital/eps-action-sbom@7684ce6314e515df7b7929fac08b4464f8a03d06
+      - name: Generate SBOM
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          scanners: "vuln"
+          format: "cyclonedx"
+          output: "sbom.cdx.json"
+          exit-code: "0"
+          trivy-config: trivy.yaml
+      - name: Upload sbom
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: sbom.cdx.json
+          path: sbom.cdx.json
 
+      - name: Check python vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          skip-files: "**/package-lock.json,**/go.mod,**/pom.xml"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_python.txt"
+          exit-code: "1"
+          trivy-config: trivy.yaml
+      - name: Check node vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          skip-files: "**/poetry.lock,**/go.mod,**/pom.xml"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_node.txt"
+          exit-code: "1"
+          trivy-config: trivy.yaml
+      - name: Check go vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          skip-files: "**/poetry.lock,**/package-lock.json,**/pom.xml"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_go.txt"
+          exit-code: "1"
+      - name: Check java vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "fs"
+          skip-files: "**/poetry.lock,**/package-lock.json,**/go.mod"
+          scan-ref: "."
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          format: "table"
+          output: "dependency_results_java.txt"
+          exit-code: "1"
+          trivy-config: trivy.yaml
+      - name: Show vulnerability output
+        if: always()
+        run: |
+          if [ -f dependency_results_python.txt ]; then
+            cat dependency_results_python.txt
+          fi
+          if [ -f dependency_results_node.txt ]; then
+            cat dependency_results_node.txt
+          fi
+          if [ -f dependency_results_java.txt ]; then
+            cat dependency_results_java.txt
+          fi
+          if [ -f dependency_results_go.txt ]; then
+            cat dependency_results_go.txt
+          fi
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
@@ -183,22 +327,22 @@ jobs:
         run: echo "SONAR_TOKEN_EXISTS=true" >> "$GITHUB_ENV"
 
       - name: Run SonarQube analysis
-        if: ${{ steps.check_java.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
         run: mvn sonar:sonar -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602
-        if: ${{ steps.check_java.outputs.uses_java == 'false' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
+        if: ${{ steps.check_languages.outputs.uses_java == 'false' && env.SONAR_TOKEN_EXISTS == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
-  cloudformation-validation:
+  IaC-validation:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
@@ -257,7 +401,7 @@ jobs:
 
       - name: Cache npm dependencies
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -362,7 +506,7 @@ jobs:
           done
 
       - name: Download terraform plans
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
         with:
           pattern: "*_terraform_plan"
           path: terraform_plans/
@@ -403,7 +547,7 @@ jobs:
 
       - name: Upload cfn_guard_output
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: cfn_guard_output
           path: cfn_guard_output
