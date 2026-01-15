@@ -3,6 +3,7 @@ const { readFileSync } = require("fs")
 
 const commitTemplate = readFileSync("./releaseNotesTemplates/commit.hbs").toString()
 const publish_package = process.env.PUBLISH_PACKAGE === "true"
+const publish_subpackages = process.env.PUBLISH_SUBPACKAGES?.split(",").map(s => s.trim()).filter(s => s.length > 0) || []
 const mainBranch = process.env.MAIN_BRANCH || "main"
 
 module.exports = {
@@ -68,6 +69,12 @@ module.exports = {
             }
         ],
         ...(publish_package ? ["@semantic-release/npm"] : []),
+        ...publish_subpackages.map(subpackage => [
+            "@semantic-release/npm",
+            {
+                pkgRoot: subpackage
+            }
+        ]),
         [
             "@semantic-release/github",
             {
