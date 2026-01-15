@@ -2,7 +2,7 @@
 const { readFileSync } = require("fs")
 
 const commitTemplate = readFileSync("./releaseNotesTemplates/commit.hbs").toString()
-const publish_subpackages = process.env.PUBLISH_SUBPACKAGES?.split(",").map(s => s.trim()).filter(s => s.length > 0) || []
+const publish_packages = process.env.PUBLISH_PACKAGES?.split(",").map(s => s.trim()).filter(s => s.length > 0) || []
 const mainBranch = process.env.MAIN_BRANCH || "main"
 
 module.exports = {
@@ -67,7 +67,7 @@ module.exports = {
                 changelogFile: "CHANGELOG.md"
             }
         ],
-        ...publish_subpackages.map(subpackage => [
+        ...publish_packages.map(subpackage => [
             "@semantic-release/npm",
             {
                 pkgRoot: subpackage
