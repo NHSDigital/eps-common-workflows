@@ -15,10 +15,11 @@ on:
                 type: string
                 required: false
                 default: "0.18.0"
-            publish_package:
-                description: "Whether to publish a package to an npm registry"
-                required: true
-                type: boolean
+            publish_packages:
+                description: "comma separated list of package folders to publish to an npm registry"
+                required: false
+                type: string
+                default: ""
             tag_format:
                 description: "The tag format to use for the release tags"
                 required: false
@@ -230,7 +231,7 @@ jobs:
                   name: config_artifact
 
             - name: Cache asdf
-              if: ${{ inputs.publish_package }}
+              if: inputs.publish_packages != ''
               uses: actions/cache@v5
               with:
                   path: |
@@ -240,7 +241,7 @@ jobs:
                       ${{ runner.os }}-asdf-
 
             - name: Install asdf dependencies in .tool-versions
-              if: ${{ inputs.publish_package }}
+              if: inputs.publish_packages != ''
               uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
               with:
                   asdf_version: ${{ inputs.asdfVersion }}
@@ -248,7 +249,7 @@ jobs:
                   PYTHON_CONFIGURE_OPTS: --enable-shared
 
             - name: Install Dependencies and Build Package
-              if: ${{ inputs.publish_package }}
+              if: inputs.publish_packages != ''
               run: |
                   make install
                   make build
@@ -314,7 +315,7 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ github.token }}
                   BRANCH_NAME: ${{ inputs.branch_name }}
-                  PUBLISH_PACKAGE: ${{ inputs.publish_package }}
+                  PUBLISH_PACKAGES: ${{ inputs.publish_packages }}
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
@@ -325,7 +326,7 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-                  PUBLISH_PACKAGE: ${{ inputs.publish_package }}
+                  PUBLISH_PACKAGES: ${{ inputs.publish_packages }}
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
