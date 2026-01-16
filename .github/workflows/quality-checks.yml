@@ -347,6 +347,36 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
 
+      # using git commit sha for version of action to ensure we have stable version
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
+        with:
+          asdf_version: ${{ inputs.asdfVersion }}
+
+      - name: Cache asdf
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: |
+            ~/.asdf
+          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
+          restore-keys: |
+            ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
+
+      - name: Install asdf dependencies in .tool-versions
+        uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+        with:
+          asdf_version: ${{ inputs.asdfVersion }}
+        env:
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+
+      - name: Reinstall poetry
+        if: ${{ inputs.reinstall_poetry }}
+        run: |
+          poetry_tool_version=$(cat .tool-versions | grep poetry)
+          poetry_version=${poetry_tool_version//"poetry "}
+          asdf uninstall poetry "$poetry_version"
+          asdf install poetry
+
       - name: Check for SAM templates
         id: check_sam_templates
         run: |
