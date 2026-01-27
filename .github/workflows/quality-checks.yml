@@ -329,11 +329,13 @@ jobs:
       - name: Run SonarQube analysis
         if: ${{ steps.check_languages.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
         run: |
-          mvn clean
-          mvn initialize
+          # issues with sonar scanner and sslcontext-kickstart 9.1.0, forcing re-download
           rm -rf ~/.m2/repository/io/github/hakky54/sslcontext-kickstart/9.1.0
           mvn dependency:get -U -Dartifact=io.github.hakky54:sslcontext-kickstart:9.1.0
-          mvn sonar:sonar -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          # run sonar scan
+          mvn sonar:sonar -Dsonar.token="$SONAR_TOKEN"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
