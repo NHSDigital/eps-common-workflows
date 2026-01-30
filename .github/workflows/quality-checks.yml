@@ -23,9 +23,21 @@ on:
         type: boolean
         description: Toggle to reinstall poetry on top of python version installed by asdf.
         default: false
+      run_docker_scan:
+        type: boolean
+        description: Toggle to run docker vulnerability scan on this repository.
+        default: false
+        required: false
+      docker_images:
+        type: string
+        description: JSON array of docker image references to scan when docker scanning is enabled.
+        default: "[]"
+        required: false
 
 jobs:
   quality_checks:
+    outputs:
+      docker_images: ${{ steps.normalized_docker_images.outputs.images }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
@@ -305,6 +317,35 @@ jobs:
           output: "dependency_results_java.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
+      - name: Build docker images
+        if: ${{ inputs.run_docker_scan == true }}
+        run: |
+          make docker-build
+
+      - name: Determine docker images to scan
+        id: normalized_docker_images
+        run: |
+          if [ "${{ inputs.run_docker_scan }}" != "true" ]; then
+            echo "Docker scanning disabled; emitting empty image list."
+            echo 'images=[]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          INPUT='${{ inputs.docker_images }}'
+          DEFAULT_IMAGE="docker.io/my-organization/my-app:${GITHUB_SHA}"
+
+          if [ -z "$INPUT" ]; then
+            INPUT="[]"
+          fi
+
+          if [ "$INPUT" = "[]" ]; then
+            echo "No docker images provided; defaulting to $DEFAULT_IMAGE"
+            echo "images=[\"$DEFAULT_IMAGE\"]" >> "$GITHUB_OUTPUT"
+          else
+            echo "Using provided docker images: $INPUT"
+            echo "images=$INPUT" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Show vulnerability output
         if: always()
         run: |
@@ -343,6 +384,48 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  docker_vulnerability_scan:
+    runs-on: ubuntu-22.04
+    needs: quality_checks
+    if: ${{ inputs.run_docker_scan == true }}
+    strategy:
+      matrix:
+        docker_image: ${{ fromJson(needs.quality_checks.outputs.docker_images) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Prepare trivy config
+        run: |
+          cat <<'EOF' > trivy.yaml
+          pkg:
+            include-dev-deps: true
+          EOF
+
+      - name: Check docker vulnerabilities
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "image"
+          image-ref: ${{ matrix.docker_image }}
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          vuln-type: "os,library"
+          format: "table"
+          output: "dependency_results_docker.txt"
+          exit-code: "1"
+          trivy-config: trivy.yaml
+
+      - name: Show docker vulnerability output
+        if: always()
+        run: |
+          echo "Scan output for ${{ matrix.docker_image }}"
+          if [ -f dependency_results_docker.txt ]; then
+            cat dependency_results_docker.txt
+          fi
 
   # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
   IaC-validation:
