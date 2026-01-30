@@ -128,7 +128,7 @@ To use this, you must have the following Makefile targets defined
 - `asdfVersion`: Override the version of asdf to install.
 - `reinstall_poetry`: If you are using this from a primarily python based project, you should set this to true to force a poetry reinstallation after python is installed
 - `run_docker_scan`: whether to run a scan of docker images
-- `docker_images`: array of docker images to scan. These must match images produced by make docker-build
+- `docker_images`: csv list of docker images to scan. These must match images produced by make docker-build
 
 #### Secret Inputs
 - `SONAR_TOKEN`: Token used to authenticate to sonar
