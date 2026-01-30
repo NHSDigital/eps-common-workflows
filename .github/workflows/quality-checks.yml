@@ -365,6 +365,8 @@ jobs:
           fetch-depth: 0
       - name: Determine docker images to scan
         id: normalized_docker_images
+        env:
+          DOCKER_IMAGES: ${{ inputs.docker_images }}
         run: |
           if [ "${{ inputs.run_docker_scan }}" != "true" ]; then
             echo "Docker scanning disabled; emitting empty image list."
@@ -372,8 +374,7 @@ jobs:
             exit 0
           fi
 
-          INPUT='${{ inputs.docker_images }}'
-
+          INPUT="${DOCKER_IMAGES}"
 
           if [ -z "$INPUT" ]; then
             INPUT="[]"
