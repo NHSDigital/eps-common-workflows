@@ -31,7 +31,7 @@ on:
       docker_images:
         type: string
         description: comma separated list of docker image references to scan when docker scanning is enabled.
-        default: "[]"
+        default: ""
         required: false
 
 jobs:
