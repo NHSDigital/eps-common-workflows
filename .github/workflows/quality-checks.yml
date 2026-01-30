@@ -480,12 +480,6 @@ jobs:
         run: |
           make install
 
-      - name: Prepare trivy config
-        run: |
-          cat <<'EOF' > trivy.yaml
-          pkg:
-            include-dev-deps: true
-          EOF
       - name: Build docker images
         if: ${{ inputs.run_docker_scan == true }}
         run: |
