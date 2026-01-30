@@ -332,15 +332,15 @@ jobs:
           fi
 
           INPUT='${{ inputs.docker_images }}'
-          DEFAULT_IMAGE="docker.io/my-organization/my-app:${GITHUB_SHA}"
+
 
           if [ -z "$INPUT" ]; then
             INPUT="[]"
           fi
 
           if [ "$INPUT" = "[]" ]; then
-            echo "No docker images provided; defaulting to $DEFAULT_IMAGE"
-            echo "images=[\"$DEFAULT_IMAGE\"]" >> "$GITHUB_OUTPUT"
+            echo "No docker images provided"
+            exit 1
           else
             echo "Using provided docker images: $INPUT"
             echo "images=$INPUT" >> "$GITHUB_OUTPUT"
