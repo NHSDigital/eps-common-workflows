@@ -249,6 +249,33 @@ jobs:
 
       - name: Run unit tests
         run: make test
+      - name: Build docker images
+        if: ${{ inputs.run_docker_scan == true }}
+        run: |
+          make docker-build
+      - name: Determine docker images to scan
+        id: normalized_docker_images
+        run: |
+          if [ "${{ inputs.run_docker_scan }}" != "true" ]; then
+            echo "Docker scanning disabled; emitting empty image list."
+            echo 'images=[]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          INPUT='${{ inputs.docker_images }}'
+
+
+          if [ -z "$INPUT" ]; then
+            INPUT="[]"
+          fi
+
+          if [ "$INPUT" = "[]" ]; then
+            echo "No docker images provided"
+            exit 1
+          else
+            echo "Using provided docker images: $INPUT"
+            echo "images=$INPUT" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -317,35 +344,6 @@ jobs:
           output: "dependency_results_java.txt"
           exit-code: "1"
           trivy-config: trivy.yaml
-      - name: Build docker images
-        if: ${{ inputs.run_docker_scan == true }}
-        run: |
-          make docker-build
-
-      - name: Determine docker images to scan
-        id: normalized_docker_images
-        run: |
-          if [ "${{ inputs.run_docker_scan }}" != "true" ]; then
-            echo "Docker scanning disabled; emitting empty image list."
-            echo 'images=[]' >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          INPUT='${{ inputs.docker_images }}'
-
-
-          if [ -z "$INPUT" ]; then
-            INPUT="[]"
-          fi
-
-          if [ "$INPUT" = "[]" ]; then
-            echo "No docker images provided"
-            exit 1
-          else
-            echo "Using provided docker images: $INPUT"
-            echo "images=$INPUT" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Show vulnerability output
         if: always()
         run: |

@@ -4,6 +4,24 @@ A collection of common workflows used by other EPS repositories
 
 The workflows that are available to use are
 
+## Adding exclusions to trivy scanning
+The quality checks job uses trivy to scan for vulnerabilities.   
+There may be times you want to add an exclusion for a known vulnerability that we are happy to accept
+To do this, in the calling repo, add trivy.yaml with this content
+```
+ignorefile: ".trivyignore.yaml"
+```
+and add a .trivyignore.yaml with this content
+```
+vulnerabilities:
+  - id: CVE-2026-24842
+    paths:
+      - "package-lock.json"
+    statement: downstream dependency for tar - waiting for new npm release
+    expired_at: 2026-06-01
+```
+See https://trivy.dev/docs/latest/configuration/filtering/#trivyignoreyaml for more details
+
 ## combine dependabot prs
 
 This workflow can be called to combine multiple open Dependabot PRs into a single PR.
@@ -96,10 +114,12 @@ jobs:
 This workflow runs common quality checks.   
 To use this, you must have the following Makefile targets defined
 - install
-- check-licences
 - lint
 - test
+- install-node (only for cdk projects)
+- compile (only for cdk projects)
 - cdk-synth (only for cdk projects)
+- docker-build (only if run_docker_scan is set to true)
 
 #### Inputs
 
@@ -107,6 +127,8 @@ To use this, you must have the following Makefile targets defined
 - `run_sonar`: Whether to run sonar checks or not.
 - `asdfVersion`: Override the version of asdf to install.
 - `reinstall_poetry`: If you are using this from a primarily python based project, you should set this to true to force a poetry reinstallation after python is installed
+- `run_docker_scan`: whether to run a scan of docker images
+- `docker_images`: array of docker images to scan. These must match images produced by make docker-build
 
 #### Secret Inputs
 - `SONAR_TOKEN`: Token used to authenticate to sonar
