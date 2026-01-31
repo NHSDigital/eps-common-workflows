@@ -23,6 +23,16 @@ on:
         type: boolean
         description: Toggle to reinstall poetry on top of python version installed by asdf.
         default: false
+      run_docker_scan:
+        type: boolean
+        description: Toggle to run docker vulnerability scan on this repository.
+        default: false
+        required: false
+      docker_images:
+        type: string
+        description: comma separated list of docker image references to scan when docker scanning is enabled.
+        default: ""
+        required: false
 
 jobs:
   quality_checks:
@@ -237,7 +247,6 @@ jobs:
 
       - name: Run unit tests
         run: make test
-
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -344,7 +353,160 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # CloudFormation validation (runs only if templates exist, ~3-5 minutes)
+  get_docker_images_to_scan:
+    outputs:
+      docker_images: ${{ steps.normalized_docker_images.outputs.images }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+      - name: Determine docker images to scan
+        id: normalized_docker_images
+        env:
+          DOCKER_IMAGES: ${{ inputs.docker_images }}
+        run: |
+          if [ "${{ inputs.run_docker_scan }}" != "true" ]; then
+            echo "Docker scanning disabled; emitting empty image list."
+            echo 'images=[]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          INPUT="${DOCKER_IMAGES}"
+
+          if [ -z "$INPUT" ]; then
+            INPUT="[]"
+          fi
+
+          normalize_to_json_array() {
+            local raw="$1"
+
+            # If the input already looks like JSON, return as-is
+            if echo "$raw" | grep -q '^[[:space:]]*\['; then
+              echo "$raw"
+              return
+            fi
+
+            local json="["
+            local first=true
+            IFS=',' read -ra ITEMS <<< "$raw"
+            for item in "${ITEMS[@]}"; do
+              # Trim whitespace around each image reference
+              item=$(echo "$item" | xargs)
+              if [ -z "$item" ]; then
+                continue
+              fi
+              if [ "$first" = true ]; then
+                first=false
+              else
+                json+=", "
+              fi
+              json+="\"$item\""
+            done
+            json+="]"
+            echo "$json"
+          }
+
+          NORMALIZED=$(normalize_to_json_array "$INPUT")
+
+          if [ "$NORMALIZED" = "[]" ]; then
+            echo "No docker images provided"
+            exit 1
+          fi
+
+          echo "Using provided docker images: $NORMALIZED"
+          echo "images=$NORMALIZED" >> "$GITHUB_OUTPUT"
+
+  docker_vulnerability_scan:
+    runs-on: ubuntu-22.04
+    needs: get_docker_images_to_scan
+    if: ${{ inputs.run_docker_scan == true }}
+    strategy:
+      matrix:
+        docker_image: ${{ fromJson(needs.get_docker_images_to_scan.outputs.docker_images) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+      # using git commit sha for version of action to ensure we have stable version
+      - name: Install asdf
+        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
+        with:
+          asdf_version: ${{ inputs.asdfVersion }}
+
+      - name: Cache asdf
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: |
+            ~/.asdf
+          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
+          restore-keys: |
+            ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
+
+      - name: Install asdf dependencies in .tool-versions
+        uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
+        with:
+          asdf_version: ${{ inputs.asdfVersion }}
+        env:
+          PYTHON_CONFIGURE_OPTS: --enable-shared
+
+      - name: Reinstall poetry
+        if: ${{ inputs.reinstall_poetry }}
+        run: |
+          poetry_tool_version=$(cat .tool-versions | grep poetry)
+          poetry_version=${poetry_tool_version//"poetry "}
+          asdf uninstall poetry "$poetry_version"
+          asdf install poetry
+
+      - name: Setting up .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Cache npm dependencies
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: make install
+        run: |
+          make install
+
+      - name: Build docker images
+        if: ${{ inputs.run_docker_scan == true }}
+        run: |
+          make docker-build
+
+      - name: Check docker vulnerabilities
+        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        with:
+          scan-type: "image"
+          image-ref: ${{ matrix.docker_image }}
+          severity: "CRITICAL,HIGH"
+          scanners: "vuln"
+          vuln-type: "os,library"
+          format: "table"
+          output: "dependency_results_docker.txt"
+          exit-code: "1"
+          trivy-config: trivy.yaml
+
+      - name: Show docker vulnerability output
+        if: always()
+        run: |
+          echo "Scan output for ${{ matrix.docker_image }}"
+          if [ -f dependency_results_docker.txt ]; then
+            cat dependency_results_docker.txt
+          fi
+
   IaC-validation:
     runs-on: ubuntu-22.04
     steps:
