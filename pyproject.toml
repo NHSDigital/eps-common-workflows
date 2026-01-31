@@ -20,6 +20,6 @@ python = "^3.14"
 pre-commit = "^4.5.1"
 
 [tool.poetry.group.dev.dependencies]
-pip-licenses = "^5.0.0"
+pip-licenses = "^5.5.1"
 
 [tool.poetry.scripts]
