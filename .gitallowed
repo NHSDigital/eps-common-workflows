@@ -5,4 +5,5 @@ password: \${{ secrets\.GITHUB_TOKEN }}
 def __init__\(self, token: str, owner: str, repo: str.*
 self\.token = token
 token = os\.environ\.get\(\"GH_TOKEN\"\)
+poetry\.lock
 \-Dsonar\.token=\"\$SONAR_TOKEN\"
