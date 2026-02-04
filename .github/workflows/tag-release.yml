@@ -352,7 +352,6 @@ jobs:
                   id: ${{ steps.get_release.outputs.id }}
                   body: |
                       ## Info
-                      [See code diff](${{ github.event.compare }})
                       [Release workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) - Workflow ID: ${{ github.run_id }}
 
                       It was initialized by [${{ github.event.sender.login }}](${{ github.event.sender.html_url }})
