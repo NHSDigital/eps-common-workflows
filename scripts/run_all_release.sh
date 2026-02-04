@@ -19,6 +19,7 @@ repos=(
     "NHSDigital/eps-vpc-resources"
     "NHSDigital/eps-aws-dashboards"
     "NHSDigital/electronic-prescription-service-clinical-prescription-tracker"
+    "NHSDigital/eps-assist-me"
 )
 
 # Array to store repos that user wants to release
