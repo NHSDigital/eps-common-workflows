@@ -17,6 +17,8 @@ jobs:
               run: |
                   if [[ "$PR_TITLE" =~ ^(Fix|Update|New|Breaking|Docs|Build|Upgrade|Chore):.*$ ]]; then
                     echo "PR title is prefixed with change type."
+                  elif [[ $PR_TITLE =~ ^Revert "(Fix|Update|New|Breaking|Docs|Build|Upgrade|Chore):.*$]]; then
+                    echo "PR title is a reverted commit with a change type"
                   else
                     echo "PR title is not prefixed with change type."
                     exit 1
