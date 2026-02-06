@@ -352,10 +352,51 @@ jobs:
                   id: ${{ steps.get_release.outputs.id }}
                   body: |
                       ## Info
-                      [See code diff](${{ github.event.compare }})
                       [Release workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) - Workflow ID: ${{ github.run_id }}
 
                       It was initialized by [${{ github.event.sender.login }}](${{ github.event.sender.html_url }})
+
+            - name: Checkout gh-pages branch
+              if: ${{ !inputs.dry_run }}
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                  repository: ${{ github.repository }}
+                  ref: gh-pages
+                  path: gh-pages
+
+            - name: Publish release notes to gh-pages
+              if: ${{ !inputs.dry_run }}
+              working-directory: gh-pages
+              env:
+                  RELEASE_ID: ${{ steps.get_release.outputs.id }}
+                  VERSION_TAG: ${{ steps.output_version_tag.outputs.VERSION_TAG }}
+                  GH_REPO: ${{ github.repository }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+                  notes_dir="release_notes"
+                  mkdir -p "$notes_dir"
+                  note_file="$notes_dir/${VERSION_TAG}.md"
+
+                  gh api "/repos/${GH_REPO}/releases/${RELEASE_ID}" | jq -r '.body // ""' > "$note_file"
+
+                  if [ ! -s "$note_file" ]; then
+                      echo "Release notes are empty; skipping gh-pages update."
+                      exit 0
+                  fi
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+                  git add -f "$note_file"
+                  if git diff --cached --quiet; then
+                      echo "No changes detected in release notes; skipping commit."
+                      exit 0
+                  fi
+
+                  git commit -m "docs: add release notes for ${VERSION_TAG}"
+                  parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
 
             - name: Output Change Set Version
               id: output_change_set_version
