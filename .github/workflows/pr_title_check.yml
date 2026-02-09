@@ -39,6 +39,6 @@ jobs:
             Ref: `${{ inputs.ref }}`
           branch: copilot-instructions-sync
           branch-suffix: random
-          sign-commit: true
+          sign-commits: true
           delete-branch: true
   
