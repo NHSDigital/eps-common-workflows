@@ -1,0 +1,39 @@
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Fetch central instructions
+        run: |
+          rm -rf .github/copilot
+          git clone \
+            --depth 1 \
+            --branch "copilot" \
+            https://github.com:NHSDigital/eps-common-workflows.git
+          mv tmp/.github/chatmodes .github/chatmodes
+          mv tmp/.github/instructions .github/instructions
+          mv tmp/.github/copilot-instructions.md .github/copilot-instructions.md
+          rm -rf tmp
+
+      - name: Create PR
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
+        with:
+          commit-message: "chore: sync Copilot instructions"
+          title: "chore: sync Copilot instructions"
+          body: |
+            Syncing Copilot instructions from central repo.
+            Ref: `${{ inputs.ref }}`
+          branch: copilot-instructions-sync
+          branch-suffix: random
+          sign-commit: true
+          delete-branch: true
+  
