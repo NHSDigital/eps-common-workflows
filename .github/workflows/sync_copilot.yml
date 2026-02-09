@@ -27,8 +27,8 @@ jobs:
       - name: Create PR
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
         with:
-          commit-message: "chore: sync Copilot instructions"
-          title: "chore: sync Copilot instructions"
+          commit-message: "Upgrade [dependabot] - sync Copilot instructions"
+          title: "Upgrade [dependabot] - sync Copilot instructions"
           body: |
             Syncing Copilot instructions from central repo.
             Ref: `${{ inputs.ref }}`
