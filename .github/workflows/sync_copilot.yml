@@ -1,3 +1,8 @@
+name: Sync copilot instructions
+
+on:
+    workflow_call:
+
 jobs:
   sync:
     runs-on: ubuntu-latest
