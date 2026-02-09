@@ -23,7 +23,7 @@ jobs:
           git clone \
             --depth 1 \
             --branch "copilot" \
-            https://github.com/NHSDigital/eps-common-workflows.git
+            https://github.com/NHSDigital/eps-common-workflows.git tmp
           mv tmp/.github/chatmodes .github/chatmodes
           mv tmp/.github/instructions .github/instructions
           mv tmp/.github/copilot-instructions.md .github/copilot-instructions.md
