@@ -2,6 +2,12 @@ name: Sync copilot instructions
 
 on:
     workflow_call:
+      inputs:
+        ref:
+          description: 'The branch to sync from the central repository'
+          required: false
+          default: 'main'
+          type: string
 
 jobs:
   sync:
@@ -22,18 +28,20 @@ jobs:
           rm -rf .github/copilot
           git clone \
             --depth 1 \
-            --branch "copilot" \
+            --branch $[BRANCH_NAME}" \
             https://github.com/NHSDigital/eps-common-workflows.git tmp
           mv tmp/.github/chatmodes .github/chatmodes
           mv tmp/.github/instructions .github/instructions
           mv tmp/.github/copilot-instructions.md .github/copilot-instructions.md
           rm -rf tmp
+        env:
+          BRANCH_NAME: ${{ inputs.ref }}
 
       - name: Create PR
         uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
         with:
-          commit-message: "Upgrade [dependabot] - sync Copilot instructions"
-          title: "Upgrade [dependabot] - sync Copilot instructions"
+          commit-message: "Upgrade: [dependabot] - sync Copilot instructions"
+          title: "Upgrade: [dependabot] - sync Copilot instructions"
           body: |
             Syncing Copilot instructions from central repo.
             Ref: `${{ inputs.ref }}`

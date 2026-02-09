@@ -4,41 +4,91 @@ on:
     workflow_call:
 
 jobs:
-  sync:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
+    pr_title_format_check:
+        runs-on: ubuntu-22.04
+        permissions:
+            pull-requests: write
+        steps:
+            - name: Check PR Title is Prefixed with Change Type
+              id: check_prefix
+              continue-on-error: true
+              env:
+                  PR_TITLE: ${{ github.event.pull_request.title }}
+              run: |
+                  if [[ "$PR_TITLE" =~ ^(Fix|Update|New|Breaking|Docs|Build|Upgrade|Chore):.*$ ]]; then
+                    echo "PR title is prefixed with change type."
+                  else
+                    echo "PR title is not prefixed with change type."
+                    exit 1
+                  fi
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          ref: ${{ env.BRANCH_NAME }}
-          fetch-depth: 0
+            - name: Check PR Title contains Ticket/Dependabot Reference
+              id: check_ticket_reference
+              continue-on-error: true
+              env:
+                  PR_TITLE: ${{ github.event.pull_request.title }}
+              run: |
+                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot)\].*-.*$ ]]; then
+                    echo "PR title contains ticket or dependabot reference."
+                  else
+                    echo "PR title does not contain ticket or dependabot reference."
+                    exit 1
+                  fi
 
-      - name: Fetch central instructions
-        run: |
-          rm -rf .github/copilot
-          git clone \
-            --depth 1 \
-            --branch "copilot" \
-            https://github.com/NHSDigital/eps-common-workflows.git tmp
-          mv tmp/.github/chatmodes .github/chatmodes
-          mv tmp/.github/instructions .github/instructions
-          mv tmp/.github/copilot-instructions.md .github/copilot-instructions.md
-          rm -rf tmp
+            - name: Extract Ticket Reference
+              id: extract_ticket_reference
+              if: steps.check_ticket_reference.outcome == 'success'
+              env:
+                  PR_TITLE: ${{ github.event.pull_request.title }}
+              run: |
+                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot)\].*-.*$ ]]; then
+                    TICKET_REF="${BASH_REMATCH[1]}"
+                    echo "Extracted ticket reference: $TICKET_REF"
+                    echo "TICKET_REF=$TICKET_REF" > "$GITHUB_OUTPUT"
+                  else
+                    echo "No ticket reference found."
+                    exit 1
+                  fi
 
-      - name: Create PR
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
-        with:
-          commit-message: "Upgrade [dependabot] - sync Copilot instructions"
-          title: "Upgrade [dependabot] - sync Copilot instructions"
-          body: |
-            Syncing Copilot instructions from central repo.
-            Ref: `${{ inputs.ref }}`
-          branch: copilot-instructions-sync
-          branch-suffix: random
-          sign-commits: true
-          delete-branch: true
-  
+            - name: Comment on PR with Jira Link
+              if: steps.extract_ticket_reference.outcome == 'success' && steps.extract_ticket_reference.outputs.TICKET_REF != 'dependabot'
+              uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  TICKET_REF: ${{ steps.extract_ticket_reference.outputs.TICKET_REF }}
+              with:
+                  message: |
+                      This PR is linked to a ticket in an NHS Digital JIRA Project. Here's a handy link to the ticket:
+                      # [${{ env.TICKET_REF }}](https://nhsd-jira.digital.nhs.uk/browse/${{ env.TICKET_REF }})
+                  comment-tag: pr-link
+
+            - name: Comment on PR for dependabot
+              if: steps.extract_ticket_reference.outcome == 'success' && steps.extract_ticket_reference.outputs.TICKET_REF == 'dependabot'
+              uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  message: |
+                      This PR is raised by Dependabot to update a dependency.
+                  comment-tag: pr-link
+
+            - name: Comment on PR for bad format
+              if: steps.check_prefix.outcome != 'success' || steps.check_ticket_reference.outcome != 'success'
+              uses: thollander/actions-comment-pull-request@24bffb9b452ba05a4f3f77933840a6a841d1b32b
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  message: |
+                      The PR title does not conform to the required format.
+                      Please ensure your PR title is prefixed with a change type (Fix, Update, New, Breaking, Docs, Build, Upgrade, Chore)
+                      and contains a ticket reference (eg. 'Fix: [AEA-####] - ...', or 'Chore: [dependabot] - ...'),
+                      then push an empty commit or recreate your PR.
+                      See the contributing guide for more details:
+                      https://github.com/NHSDigital/eps-common-workflows/blob/main/CONTRIBUTING.md
+                  comment-tag: pr-link
+
+            - name: Fail job due to invalid PR title format
+              if: steps.check_prefix.outcome != 'success' || steps.check_ticket_reference.outcome != 'success'
+              run: |
+                  echo "Job failed due to invalid PR title format."
+                  exit 1
