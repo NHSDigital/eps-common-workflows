@@ -44,7 +44,8 @@ jobs:
           java-version: "21"
           distribution: "corretto"
 
-      - name: Checkout code
+      - &checkout
+        name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ env.BRANCH_NAME }}
@@ -83,28 +84,29 @@ jobs:
           git-secrets --scan-history .
 
       # using git commit sha for version of action to ensure we have stable version
-      - name: Install asdf
+      - &install_asdf
+        name: Install asdf
         uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
         with:
           asdf_version: ${{ inputs.asdfVersion }}
 
-      - name: Cache asdf
+      - &cache_asdf
+        name: Cache asdf
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
-          path: |
-            ~/.asdf
+          path: ~/.asdf
           key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
-          restore-keys: |
-            ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
 
-      - name: Install asdf dependencies in .tool-versions
+      - &install_asdf_deps
+        name: Install asdf dependencies in .tool-versions
         uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
         with:
           asdf_version: ${{ inputs.asdfVersion }}
         env:
           PYTHON_CONFIGURE_OPTS: --enable-shared
 
-      - name: Reinstall poetry
+      - &reinstall_poetry
+        name: Reinstall poetry
         if: ${{ inputs.reinstall_poetry }}
         run: |
           poetry_tool_version=$(cat .tool-versions | grep poetry)
@@ -112,20 +114,20 @@ jobs:
           asdf uninstall poetry "$poetry_version"
           asdf install poetry
 
-      - name: Setting up .npmrc
+      - &setup_npmrc
+        name: Setting up .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
           echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
 
-      - name: Cache npm dependencies
+      - &cache_npm
+        name: Cache npm dependencies
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
         with:
           path: ./node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: make install
         run: |
@@ -232,9 +234,6 @@ jobs:
           fi
       - name: Run code lint
         run: make lint
-
-      - name: actionlint
-        uses: raven-actions/actionlint@e01d1ea33dd6a5ed517d95b4c0c357560ac6f518
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
@@ -510,41 +509,11 @@ jobs:
   IaC-validation:
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          ref: ${{ env.BRANCH_NAME }}
-          fetch-depth: 0
-
-      # using git commit sha for version of action to ensure we have stable version
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ inputs.asdfVersion }}
-
-      - name: Cache asdf
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-        with:
-          path: |
-            ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
-          restore-keys: |
-            ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
-
-      - name: Install asdf dependencies in .tool-versions
-        uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ inputs.asdfVersion }}
-        env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared
-
-      - name: Reinstall poetry
-        if: ${{ inputs.reinstall_poetry }}
-        run: |
-          poetry_tool_version=$(cat .tool-versions | grep poetry)
-          poetry_version=${poetry_tool_version//"poetry "}
-          asdf uninstall poetry "$poetry_version"
-          asdf install poetry
+      - *checkout
+      - *install_asdf
+      - *cache_asdf
+      - *install_asdf_deps
+      - *reinstall_poetry
 
       - name: Check for SAM templates
         id: check_sam_templates
@@ -598,22 +567,8 @@ jobs:
           cfn-lint -I "cloudformation/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
           cfn-lint -I "SAMtemplates/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
 
-      - name: Cache npm dependencies
-        if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: Setting up .npmrc
-        if: steps.check_cdk.outputs.cdk_exists == 'true'
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
-          echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
+      - *cache_npm
+      - *setup_npmrc
 
       - name: make install NodeJS
         if: steps.check_cdk.outputs.cdk_exists == 'true'
