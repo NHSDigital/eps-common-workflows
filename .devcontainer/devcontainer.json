@@ -7,40 +7,39 @@
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "DOCKER_GID": "${env:DOCKER_GID:}"
-    }
-  },
-  "mounts": [
-    "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind",
-    "source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
-    "source=${env:HOME}${env:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind",
-    "source=${env:HOME}${env:USERPROFILE}/.npmrc,target=/home/vscode/.npmrc,type=bind",
-    "source=${env:HOME}${env:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig,type=bind"
-  ],
-  "containerUser": "vscode",
-  "remoteEnv": {
-    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
-  },
-  "features": {},
-  "customizations": {
-    "vscode": {
-      "extensions": [
-        "AmazonWebServices.aws-toolkit-vscode",
-        "redhat.vscode-yaml",
-        "eamodio.gitlens",
-        "github.vscode-pull-request-github",
-        "streetsidesoftware.code-spell-checker",
-        "timonwong.shellcheck",
-        "github.vscode-github-actions"
-      ],
-      "settings": {
-        "cSpell.words": [
-          "fhir",
-          "Formik",
-          "pino",
-          "serialisation"
-        ]
+      "DOCKER_GID": "${env:DOCKER_GID:}",
+      "IMAGE_VERSION": "pr-15-c27cba7" // This arg is used in the Dockerfile to specify the base image version     }
+    },
+    "mounts": [
+      "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind",
+      "source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
+      "source=${env:HOME}${env:USERPROFILE}/.gnupg,target=/home/vscode/.gnupg,type=bind",
+      "source=${env:HOME}${env:USERPROFILE}/.npmrc,target=/home/vscode/.npmrc,type=bind"
+    ],
+    "containerUser": "vscode",
+    "remoteEnv": {
+      "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+    },
+    "features": {},
+    "customizations": {
+      "vscode": {
+        "extensions": [
+          "AmazonWebServices.aws-toolkit-vscode",
+          "redhat.vscode-yaml",
+          "eamodio.gitlens",
+          "github.vscode-pull-request-github",
+          "streetsidesoftware.code-spell-checker",
+          "timonwong.shellcheck",
+          "github.vscode-github-actions"
+        ],
+        "settings": {
+          "cSpell.words": [
+            "fhir",
+            "Formik",
+            "pino",
+            "serialisation"
+          ]
+        }
       }
     }
   }
-}
