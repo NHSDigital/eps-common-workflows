@@ -33,10 +33,15 @@ on:
         description: comma separated list of docker image references to scan when docker scanning is enabled.
         default: ""
         required: false
+      runtime_docker_image:
+        type: string
+        required: true
 
 jobs:
   quality_checks:
     runs-on: ubuntu-22.04
+    container:
+      image: ${{ inputs.runtime_docker_image }}
     steps:
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
         if: ${{ inputs.install_java }}
@@ -50,69 +55,9 @@ jobs:
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
-
-      # Must be done before anything installs, or it will check dependencies for secrets too.
-      - name: Ensure .gitallowed exists, for secret scanning
-        run: |
-          if [ ! -f ".gitallowed" ]; then
-            echo "Creating empty .gitallowed file"
-            touch .gitallowed
-            fi
-          echo "./nhsd-rules-deny.txt:10" >> .gitallowed
-          echo "Allowing the following regex patterns:"
-          cat .gitallowed
-
-      - name: Install git-secrets
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git curl
-          git clone https://github.com/awslabs/git-secrets.git /tmp/git-secrets
-          cd /tmp/git-secrets
-          sudo make install
-
-      - name: Download regex patterns
-        run: |
-          curl -L https://raw.githubusercontent.com/NHSDigital/software-engineering-quality-framework/main/tools/nhsd-git-secrets/nhsd-rules-deny.txt -o nhsd-rules-deny.txt
-
-      - name: Configure git-secrets
-        run: |
-          git-secrets --register-aws
-          git-secrets --add-provider -- cat nhsd-rules-deny.txt
-
       - name: Run secrets scan
         run: |
           git-secrets --scan-history .
-
-      # using git commit sha for version of action to ensure we have stable version
-      - &install_asdf
-        name: Install asdf
-        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ inputs.asdfVersion }}
-
-      - &cache_asdf
-        name: Cache asdf
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-        with:
-          path: ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
-
-      - &install_asdf_deps
-        name: Install asdf dependencies in .tool-versions
-        uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ inputs.asdfVersion }}
-        env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared
-
-      - &reinstall_poetry
-        name: Reinstall poetry
-        if: ${{ inputs.reinstall_poetry }}
-        run: |
-          poetry_tool_version=$(cat .tool-versions | grep poetry)
-          poetry_version=${poetry_tool_version//"poetry "}
-          asdf uninstall poetry "$poetry_version"
-          asdf install poetry
 
       - &setup_npmrc
         name: Setting up .npmrc
@@ -356,6 +301,8 @@ jobs:
     outputs:
       docker_images: ${{ steps.normalized_docker_images.outputs.images }}
     runs-on: ubuntu-22.04
+    container:
+      image: ${{ inputs.runtime_docker_image }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -420,6 +367,8 @@ jobs:
 
   docker_vulnerability_scan:
     runs-on: ubuntu-22.04
+    container:
+      image: ghcr.io/nhsdigital/eps-devcontainers/fhir_facade_api:v1.0.0
     needs: get_docker_images_to_scan
     if: ${{ inputs.run_docker_scan == true }}
     strategy:
@@ -431,36 +380,6 @@ jobs:
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
-      # using git commit sha for version of action to ensure we have stable version
-      - name: Install asdf
-        uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ inputs.asdfVersion }}
-
-      - name: Cache asdf
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-        with:
-          path: |
-            ~/.asdf
-          key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
-          restore-keys: |
-            ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}-${{ inputs.asdfVersion }}
-
-      - name: Install asdf dependencies in .tool-versions
-        uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-        with:
-          asdf_version: ${{ inputs.asdfVersion }}
-        env:
-          PYTHON_CONFIGURE_OPTS: --enable-shared
-
-      - name: Reinstall poetry
-        if: ${{ inputs.reinstall_poetry }}
-        run: |
-          poetry_tool_version=$(cat .tool-versions | grep poetry)
-          poetry_version=${poetry_tool_version//"poetry "}
-          asdf uninstall poetry "$poetry_version"
-          asdf install poetry
-
       - name: Setting up .npmrc
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -508,12 +427,10 @@ jobs:
 
   IaC-validation:
     runs-on: ubuntu-22.04
+    container:
+      image: ${{ inputs.runtime_docker_image }}
     steps:
       - *checkout
-      - *install_asdf
-      - *cache_asdf
-      - *install_asdf_deps
-      - *reinstall_poetry
 
       - name: Check for SAM templates
         id: check_sam_templates
