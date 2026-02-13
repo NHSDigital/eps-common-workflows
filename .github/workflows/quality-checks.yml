@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.runtime_docker_image }}
-      options: --user 0
+      options: --user 1001:1001
     steps:
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
         if: ${{ inputs.install_java }}
@@ -77,6 +77,7 @@ jobs:
 
       - name: make install
         run: |
+          id
           make install
 
       - name: Check language tools used and setup trivy config
