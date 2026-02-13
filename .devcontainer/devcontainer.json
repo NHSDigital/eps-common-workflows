@@ -8,7 +8,7 @@
     "context": "..",
     "args": {
       "DOCKER_GID": "${env:DOCKER_GID:}",
-      "IMAGE_VERSION": "pr-15-c27cba7" // This arg is used in the Dockerfile to specify the base image version     }
+      "IMAGE_VERSION": "v1.0.1" // This arg is used in the Dockerfile to specify the base image version     }
     },
     "mounts": [
       "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind",
