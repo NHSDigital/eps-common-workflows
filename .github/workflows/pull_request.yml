@@ -38,7 +38,7 @@ jobs:
     needs: [get_asdf_version]
     with:
       asdfVersion: ${{ needs.get_asdf_version.outputs.asdf_version }}
-      runtime_docker_image: "ghcr.io/nhsdigital/eps-devcontainers/node_24_python_3_14:v1.0.0"
+      runtime_docker_image: "ghcr.io/nhsdigital/eps-devcontainers/node_24_python_3_14:pr-15-a1b9b25"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   tag_release:
