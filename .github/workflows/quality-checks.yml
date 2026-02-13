@@ -42,7 +42,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.runtime_docker_image }}
-      options: --user 1001:1001
+      options: --user 1000:1000
     steps:
       - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
         if: ${{ inputs.install_java }}
@@ -302,11 +302,10 @@ jobs:
   get_docker_images_to_scan:
     outputs:
       docker_images: ${{ steps.normalized_docker_images.outputs.images }}
-      options: --user 1001:1001
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.runtime_docker_image }}
-      options: --user 0
+      options: --user 1000:1000
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -433,7 +432,7 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.runtime_docker_image }}
-      options: --user 1001:1001
+      options: --user 1000:1000
     steps:
       - *checkout
 
