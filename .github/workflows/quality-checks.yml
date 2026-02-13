@@ -301,6 +301,7 @@ jobs:
   get_docker_images_to_scan:
     outputs:
       docker_images: ${{ steps.normalized_docker_images.outputs.images }}
+      options: --user 1001:1001
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.runtime_docker_image }}
@@ -370,7 +371,7 @@ jobs:
   docker_vulnerability_scan:
     runs-on: ubuntu-22.04
     container:
-      image: ghcr.io/nhsdigital/eps-devcontainers/fhir_facade_api:v1.0.0
+      image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
     needs: get_docker_images_to_scan
     if: ${{ inputs.run_docker_scan == true }}
     strategy:
