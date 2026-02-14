@@ -5,7 +5,7 @@
     "context": "..",
     "args": {
       "DOCKER_GID": "${env:DOCKER_GID:}",
-      "IMAGE_VERSION": "pr-16-69b4bfb",
+      "IMAGE_VERSION": "pr-16-f22b31d",
       "IMAGE": "node_24_python_3_14"
     },
     "postAttachCommand": "git-secrets --register-aws; git-secrets --add-provider -- cat /usr/share/secrets-scanner/nhsd-rules-deny.txt",
