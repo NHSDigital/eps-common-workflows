@@ -31,7 +31,7 @@ jobs:
     container:
       image: ${{ inputs.runtime_docker_image }}
       env:
-        HOME: /home/vscode
+        ASDF_DATA_DIR: /home/vscode/.asdf
       options: --user 1001:1001
     steps:
       - &checkout
