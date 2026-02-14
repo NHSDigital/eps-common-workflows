@@ -30,6 +30,8 @@ jobs:
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.runtime_docker_image }}
+      env:
+        HOME: /home/vscode
       options: --user 1001:1001
     steps:
       - &checkout
