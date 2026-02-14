@@ -1,15 +1,14 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
   "name": "Ubuntu",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
       "DOCKER_GID": "${env:DOCKER_GID:}",
-      "IMAGE_VERSION": "v1.0.1" // This arg is used in the Dockerfile to specify the base image version     }
+      "IMAGE_VERSION": "pr-16-69b4bfb",
+      "IMAGE": "node_24_python_3_14"
     },
+    "postAttachCommand": "git-secrets --register-aws; git-secrets --add-provider -- cat /usr/share/secrets-scanner/nhsd-rules-deny.txt",
     "mounts": [
       "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind",
       "source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
@@ -43,3 +42,4 @@
       }
     }
   }
+}

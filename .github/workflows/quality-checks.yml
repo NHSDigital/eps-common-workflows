@@ -6,23 +6,11 @@ on:
       SONAR_TOKEN:
         required: false
     inputs:
-      install_java:
-        type: boolean
-        description: "If true, the action will install java into the runner, separately from ASDF."
-        default: false
-        required: false
       run_sonar:
         type: boolean
         description: Toggle to run sonar code analyis on this repository.
         default: true
         required: false
-      asdfVersion:
-        type: string
-        required: true
-      reinstall_poetry:
-        type: boolean
-        description: Toggle to reinstall poetry on top of python version installed by asdf.
-        default: false
       run_docker_scan:
         type: boolean
         description: Toggle to run docker vulnerability scan on this repository.
@@ -44,12 +32,6 @@ jobs:
       image: ${{ inputs.runtime_docker_image }}
       options: --user 1000:1000
     steps:
-      - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654
-        if: ${{ inputs.install_java }}
-        with:
-          java-version: "21"
-          distribution: "corretto"
-
       - &checkout
         name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd

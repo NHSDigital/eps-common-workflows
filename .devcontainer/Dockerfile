@@ -1,5 +1,6 @@
 ARG IMAGE_VERSION=latest
-FROM ghcr.io/nhsdigital/eps-devcontainers/node_24_python_3_14:${IMAGE_VERSION}
+ARG IMAGE=node_24_python_3_14
+FROM ghcr.io/nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
 
 USER root
 # specify DOCKER_GID to force container docker group id to match host
@@ -12,4 +13,10 @@ RUN if [ -n "${DOCKER_GID}" ]; then \
     usermod -aG docker vscode; \
     fi
 
+# fix vscode user back to 1000
+RUN usermod -u 1000 vscode; \
+    groupmod -g 1000 vscode; \
+    chown -R vscode:vscode /home/vscode
+
+RUN rm -rf /home/vscode/.ssh
 USER vscode
