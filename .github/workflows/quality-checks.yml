@@ -59,7 +59,11 @@ jobs:
 
       - name: make install
         run: |
+          echo "Running id"
           id
+          echo "Running pwd"
+          pwd
+          echo "home is $HOME"
           echo "running asdf plugin list"
           asdf plugin list
           echo "running make install"
