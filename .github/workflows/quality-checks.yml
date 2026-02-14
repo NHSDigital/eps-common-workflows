@@ -60,7 +60,9 @@ jobs:
       - name: make install
         run: |
           id
-          asdf install
+          echo "running asdf plugin list"
+          asdf plugin list
+          echo "running make install"
           make install
 
       - name: Check language tools used and setup trivy config
