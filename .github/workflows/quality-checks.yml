@@ -60,6 +60,7 @@ jobs:
       - name: make install
         run: |
           id
+          asdf install
           make install
 
       - name: Check language tools used and setup trivy config
