@@ -77,6 +77,8 @@ jobs:
             echo "home is $HOME"
             echo "running asdf plugin list"
             asdf plugin list
+            echo "Checking mount"
+            ls -l /
             echo "running make install"
             make install
 
