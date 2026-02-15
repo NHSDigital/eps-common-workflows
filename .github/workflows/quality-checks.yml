@@ -79,6 +79,8 @@ jobs:
             asdf plugin list
             echo "Checking mount"
             ls -l /
+            echo $PATH
+            export PATH="$HOME/.asdf/shims:$PATH"
             echo "running make install"
             make install
 
