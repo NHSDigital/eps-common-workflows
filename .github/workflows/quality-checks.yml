@@ -41,6 +41,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             git-secrets --scan-history .
@@ -66,6 +67,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             echo "Running id"
@@ -139,6 +141,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             POETRY_VERSION=$(poetry --version | awk '{print $3}')
@@ -158,6 +161,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             cd src
@@ -197,6 +201,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             make lint
@@ -216,6 +221,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             make test
@@ -506,6 +512,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             pip install cfn-lint
@@ -522,6 +529,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             make install-node && make compile
@@ -533,6 +541,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             make cdk-synth
@@ -544,6 +553,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             set -eou pipefail
@@ -565,6 +575,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
             set -eou pipefail
@@ -595,6 +606,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
 
@@ -617,6 +629,7 @@ jobs:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
+            -u 1001:1001
           run: |
             cd /work
 
