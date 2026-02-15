@@ -548,7 +548,6 @@ jobs:
             cd /work
             make cdk-synth
 
-
       - name: Init cfn-guard
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
