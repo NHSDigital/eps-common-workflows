@@ -40,7 +40,7 @@ jobs:
     uses: ./.github/workflows/quality-checks.yml
     needs: [get_config_values]
     with:
-      runtime_docker_image: "ghcr.io/nhsdigital/eps-devcontainers/node_24_python_3_14:${{ needs.get_config_values.outputs.devcontainer_version }}"
+      runtime_docker_image: "node_24_python_3_14:${{ needs.get_config_values.outputs.devcontainer_version }}"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   tag_release:
