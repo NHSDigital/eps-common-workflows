@@ -38,8 +38,7 @@ jobs:
       - name: Run secrets scan
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -65,8 +64,7 @@ jobs:
       - name: make install
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -138,8 +136,7 @@ jobs:
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -159,8 +156,7 @@ jobs:
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -200,8 +196,7 @@ jobs:
       - name: Run code lint
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -221,8 +216,7 @@ jobs:
       - name: Run unit tests
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -513,8 +507,7 @@ jobs:
         if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -531,8 +524,7 @@ jobs:
         if: steps.check_cdk.outputs.cdk_exists == 'true'
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -544,8 +536,7 @@ jobs:
         if: steps.check_cdk.outputs.cdk_exists == 'true'
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -557,8 +548,7 @@ jobs:
       - name: Init cfn-guard
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -580,8 +570,7 @@ jobs:
         if: steps.check_sam_templates.outputs.sam_exists == 'true'
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -612,8 +601,7 @@ jobs:
         if: steps.check_cf_templates.outputs.cf_exists == 'true'
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -636,8 +624,7 @@ jobs:
         if: steps.check_cdk.outputs.cdk_exists == 'true'
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
-          registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: gcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
