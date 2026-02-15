@@ -28,11 +28,6 @@ on:
 jobs:
   quality_checks:
     runs-on: ubuntu-22.04
-    container:
-      image: ${{ inputs.runtime_docker_image }}
-      env:
-        ASDF_DATA_DIR: /home/vscode/.asdf
-      options: --user 1001:1001
     steps:
       - &checkout
         name: Checkout code
@@ -60,16 +55,24 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: make install
-        run: |
-          echo "Running id"
-          id
-          echo "Running pwd"
-          pwd
-          echo "home is $HOME"
-          echo "running asdf plugin list"
-          asdf plugin list
-          echo "running make install"
-          make install
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            echo "Running id"
+            id
+            echo "Running pwd"
+            pwd
+            echo "home is $HOME"
+            echo "running asdf plugin list"
+            asdf plugin list
+            echo "running make install"
+            make install
 
       - name: Check language tools used and setup trivy config
         id: check_languages
@@ -125,22 +128,38 @@ jobs:
           cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
       - name: convert python dependencies to requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        run: |
-          POETRY_VERSION=$(poetry --version | awk '{print $3}')
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            POETRY_VERSION=$(poetry --version | awk '{print $3}')
 
-          if [[ "$(printf '%s\n' "2.0.0" "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "2.0.0" ]] \
-            && [[ "$(printf '%s\n' "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "$POETRY_VERSION" ]]; then
-              echo "Poetry version $POETRY_VERSION is >=2.0.0 and <3.0.0 - installing plugin-export"
-              poetry self add poetry-plugin-export
-          else
-              echo "Poetry version $POETRY_VERSION is outside the required range so not installing plugin-export"
-          fi
-          poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
+            if [[ "$(printf '%s\n' "2.0.0" "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "2.0.0" ]] \
+              && [[ "$(printf '%s\n' "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "$POETRY_VERSION" ]]; then
+                echo "Poetry version $POETRY_VERSION is >=2.0.0 and <3.0.0 - installing plugin-export"
+                poetry self add poetry-plugin-export
+            else
+                echo "Poetry version $POETRY_VERSION is outside the required range so not installing plugin-export"
+            fi
+            poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
       - name: download go dependencies
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        run: |
-          cd src
-          go mod vendor
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            cd src
+            go mod vendor
       - name: Check licenses
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -171,7 +190,16 @@ jobs:
             cat license_scan.txt
           fi
       - name: Run code lint
-        run: make lint
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            make lint
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38
@@ -183,7 +211,16 @@ jobs:
             .git
 
       - name: Run unit tests
-        run: make test
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            make test
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
         with:
@@ -294,9 +331,6 @@ jobs:
     outputs:
       docker_images: ${{ steps.normalized_docker_images.outputs.images }}
     runs-on: ubuntu-22.04
-    container:
-      image: ${{ inputs.runtime_docker_image }}
-      options: --user 1001:1001
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -361,8 +395,6 @@ jobs:
 
   docker_vulnerability_scan:
     runs-on: ubuntu-22.04
-    container:
-      image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
     needs: get_docker_images_to_scan
     if: ${{ inputs.run_docker_scan == true }}
     strategy:
@@ -421,9 +453,6 @@ jobs:
 
   IaC-validation:
     runs-on: ubuntu-22.04
-    container:
-      image: ${{ inputs.runtime_docker_image }}
-      options: --user 1001:1001
     steps:
       - *checkout
 
@@ -474,102 +503,150 @@ jobs:
 
       - name: Run cfn-lint
         if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
-        run: |
-          pip install cfn-lint
-          cfn-lint -I "cloudformation/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
-          cfn-lint -I "SAMtemplates/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            pip install cfn-lint
+            cfn-lint -I "cloudformation/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
+            cfn-lint -I "SAMtemplates/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
 
       - *cache_npm
       - *setup_npmrc
 
       - name: make install NodeJS
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        run: |
-          make install-node && make compile
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            make install-node && make compile
 
       - name: Run cdk-synth
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        run: |
-          make cdk-synth
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            make cdk-synth
 
-      - name: Install AWS SAM CLI
-        if: steps.check_sam_templates.outputs.sam_exists == 'true'
-        run: |
-          pip install aws-sam-cli
 
       - name: Init cfn-guard
-        run: |
-          #!/usr/bin/env bash
-          set -eou pipefail
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            set -eou pipefail
 
-          rm -rf /tmp/ruleset
-          rm -rf cfn_guard_output
+            rm -rf /tmp/ruleset
+            rm -rf cfn_guard_output
 
-          wget -O /tmp/ruleset.zip https://github.com/aws-cloudformation/aws-guard-rules-registry/releases/download/1.0.2/ruleset-build-v1.0.2.zip >/dev/null 2>&1
-          unzip /tmp/ruleset.zip -d /tmp/ruleset/ >/dev/null 2>&1
+            wget -O /tmp/ruleset.zip https://github.com/aws-cloudformation/aws-guard-rules-registry/releases/download/1.0.2/ruleset-build-v1.0.2.zip >/dev/null 2>&1
+            unzip /tmp/ruleset.zip -d /tmp/ruleset/ >/dev/null 2>&1
 
-          curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh >/dev/null 2>&1
+            curl --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/aws-cloudformation/cloudformation-guard/main/install-guard.sh | sh >/dev/null 2>&1
 
-          mkdir -p cfn_guard_output
+            mkdir -p cfn_guard_output
 
       - name: Run cfn-guard script for sam templates
         if: steps.check_sam_templates.outputs.sam_exists == 'true'
-        run: |
-          #!/usr/bin/env bash
-          set -eou pipefail
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            set -eou pipefail
 
-          declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
-          for ruleset in "${rulesets[@]}"
-          do
-            while IFS= read -r -d '' file
+            declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
+            for ruleset in "${rulesets[@]}"
             do
-              echo "checking SAM template $file with ruleset $ruleset"
-              mkdir -p "$(dirname cfn_guard_output/"$file")"
+              while IFS= read -r -d '' file
+              do
+                echo "checking SAM template $file with ruleset $ruleset"
+                mkdir -p "$(dirname cfn_guard_output/"$file")"
 
-              # Transform the SAM template to CloudFormation and then run through cfn-guard
-              SAM_OUTPUT=$(sam validate -t "$file" --region eu-west-2 --debug 2>&1 | \
-                  grep -Pazo '(?s)AWSTemplateFormatVersion.*\n\/' | tr -d '\0')
-              echo "${SAM_OUTPUT::-1}" | ~/.guard/bin/cfn-guard validate \
-                  --rules "/tmp/ruleset/output/$ruleset.guard" \
-                  --show-summary fail \
-                  > "cfn_guard_output/${file}_${ruleset}.txt"
+                # Transform the SAM template to CloudFormation and then run through cfn-guard
+                SAM_OUTPUT=$(sam validate -t "$file" --region eu-west-2 --debug 2>&1 | \
+                    grep -Pazo '(?s)AWSTemplateFormatVersion.*\n\/' | tr -d '\0')
+                echo "${SAM_OUTPUT::-1}" | ~/.guard/bin/cfn-guard validate \
+                    --rules "/tmp/ruleset/output/$ruleset.guard" \
+                    --show-summary fail \
+                    > "cfn_guard_output/${file}_${ruleset}.txt"
 
-            done < <(find ./SAMtemplates -name '*.y*ml' -print0)
-          done
+              done < <(find ./SAMtemplates -name '*.y*ml' -print0)
+            done
 
       - name: Run cfn-guard script for cloudformation templates
         if: steps.check_cf_templates.outputs.cf_exists == 'true'
-        run: |
-          #!/usr/bin/env bash
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
 
-          declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
-          for ruleset in "${rulesets[@]}"
-          do
-            echo "Checking all templates in cloudformation folder with ruleset $ruleset"
+            declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
+            for ruleset in "${rulesets[@]}"
+            do
+              echo "Checking all templates in cloudformation folder with ruleset $ruleset"
 
-            ~/.guard/bin/cfn-guard validate \
-                --data cloudformation \
-                    --rules "/tmp/ruleset/output/$ruleset.guard" \
-                --show-summary fail \
-                > "cfn_guard_output/cloudformation_$ruleset.txt"
-          done
+              ~/.guard/bin/cfn-guard validate \
+                  --data cloudformation \
+                      --rules "/tmp/ruleset/output/$ruleset.guard" \
+                  --show-summary fail \
+                  > "cfn_guard_output/cloudformation_$ruleset.txt"
+            done
 
       - name: Run cfn-guard script for cdk templates
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        run: |
-          #!/usr/bin/env bash
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
 
-          declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
-          for ruleset in "${rulesets[@]}"
-          do
-            echo "Checking all templates in cdk.out folder with ruleset $ruleset"
+            declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
+            for ruleset in "${rulesets[@]}"
+            do
+              echo "Checking all templates in cdk.out folder with ruleset $ruleset"
 
-            ~/.guard/bin/cfn-guard validate \
-                --data cdk.out \
-                    --rules "/tmp/ruleset/output/$ruleset.guard" \
-                --show-summary fail \
-                > "cfn_guard_output/cdk.out_$ruleset.txt"
-          done
+              ~/.guard/bin/cfn-guard validate \
+                  --data cdk.out \
+                      --rules "/tmp/ruleset/output/$ruleset.guard" \
+                  --show-summary fail \
+                  > "cfn_guard_output/cdk.out_$ruleset.txt"
+            done
 
       - name: Download terraform plans
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131

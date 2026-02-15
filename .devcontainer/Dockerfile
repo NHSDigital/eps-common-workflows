@@ -12,11 +12,3 @@ RUN if [ -n "${DOCKER_GID}" ]; then \
     fi && \
     usermod -aG docker vscode; \
     fi
-
-# fix vscode user back to 1000
-RUN usermod -u 1000 vscode; \
-    groupmod -g 1000 vscode; \
-    chown -R vscode:vscode /home/vscode
-
-RUN rm -rf /home/vscode/.ssh
-USER vscode
