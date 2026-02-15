@@ -39,7 +39,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -66,7 +66,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -139,7 +139,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -160,7 +160,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -201,7 +201,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -222,7 +222,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -514,7 +514,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -532,7 +532,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -545,7 +545,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -558,7 +558,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -581,7 +581,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -613,7 +613,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
@@ -637,7 +637,7 @@ jobs:
         uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
         with:
           registry: gcr.io
-          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          image: nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           options: >
             -v ${{ github.workspace }}:/work 
             -u vscode
