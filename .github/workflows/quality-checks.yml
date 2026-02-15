@@ -36,8 +36,16 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
       - name: Run secrets scan
-        run: |
-          git-secrets --scan-history .
+        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        with:
+          registry: gcr.io
+          image: nhsdigital/eps-devcontainers/${IMAGE}:${IMAGE_VERSION}
+          options: >
+            -v ${{ github.workspace }}:/work 
+            -u vscode
+          run: |
+            cd /work
+            git-secrets --scan-history .
 
       - &setup_npmrc
         name: Setting up .npmrc
