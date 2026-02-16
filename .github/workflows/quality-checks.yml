@@ -36,8 +36,9 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
       - name: Run secrets scan
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             git-secrets --scan-history .
@@ -58,8 +59,9 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: make install
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             make install
@@ -118,8 +120,9 @@ jobs:
           cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
       - name: convert python dependencies to requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             POETRY_VERSION=$(poetry --version | awk '{print $3}')
@@ -134,8 +137,9 @@ jobs:
             poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
       - name: download go dependencies
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             cd src
@@ -170,8 +174,9 @@ jobs:
             cat license_scan.txt
           fi
       - name: Run code lint
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             make lint
@@ -186,8 +191,9 @@ jobs:
             .git
 
       - name: Run unit tests
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             make test
@@ -473,8 +479,9 @@ jobs:
 
       - name: Run cfn-lint
         if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             pip install cfn-lint
@@ -486,23 +493,26 @@ jobs:
 
       - name: make install NodeJS
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             make install-node && make compile
 
       - name: Run cdk-synth
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             make cdk-synth
 
       - name: Init cfn-guard
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             set -eou pipefail
@@ -519,8 +529,9 @@ jobs:
 
       - name: Run cfn-guard script for sam templates
         if: steps.check_sam_templates.outputs.sam_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             set -eou pipefail
@@ -546,8 +557,9 @@ jobs:
 
       - name: Run cfn-guard script for cloudformation templates
         if: steps.check_cf_templates.outputs.cf_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
@@ -564,8 +576,9 @@ jobs:
 
       - name: Run cfn-guard script for cdk templates
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
+        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
         with:
+          workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
             declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
