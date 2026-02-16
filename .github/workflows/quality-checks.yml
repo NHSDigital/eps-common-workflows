@@ -36,7 +36,7 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
       - name: Run secrets scan
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -59,7 +59,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: make install
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -120,7 +120,7 @@ jobs:
           cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
       - name: convert python dependencies to requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -137,7 +137,7 @@ jobs:
             poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
       - name: download go dependencies
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -174,7 +174,7 @@ jobs:
             cat license_scan.txt
           fi
       - name: Run code lint
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -191,7 +191,7 @@ jobs:
             .git
 
       - name: Run unit tests
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -479,7 +479,7 @@ jobs:
 
       - name: Run cfn-lint
         if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -493,7 +493,7 @@ jobs:
 
       - name: make install NodeJS
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -502,7 +502,7 @@ jobs:
 
       - name: Run cdk-synth
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -510,7 +510,7 @@ jobs:
             make cdk-synth
 
       - name: Init cfn-guard
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -529,7 +529,7 @@ jobs:
 
       - name: Run cfn-guard script for sam templates
         if: steps.check_sam_templates.outputs.sam_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -557,7 +557,7 @@ jobs:
 
       - name: Run cfn-guard script for cloudformation templates
         if: steps.check_cf_templates.outputs.cf_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
@@ -576,7 +576,7 @@ jobs:
 
       - name: Run cfn-guard script for cdk templates
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: anthony-nhs/docker-run-action-fork@f56dd4e5c3b9c8b9fa619939c02d809f35ad82c9
+        uses: anthony-nhs/docker-run-action-fork@df2f1ddaa0d7f80e0b95404d81a1ee0919e37985
         with:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
