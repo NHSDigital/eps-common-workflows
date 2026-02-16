@@ -64,6 +64,10 @@ jobs:
           workspace_folder: ${{ github.workspace }}
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
           run: |
+            echo "current dir is $(pwd)"
+            echo "current user is $(whoami)"
+            echo "listing current dir contents"
+            ls -la
             make install
 
       - name: Check language tools used and setup trivy config
