@@ -36,14 +36,10 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
       - name: Run secrets scan
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             git-secrets --scan-history .
 
       - &setup_npmrc
@@ -62,26 +58,10 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: make install
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
-            echo "Running id"
-            id
-            echo "Running pwd"
-            pwd
-            echo "home is $HOME"
-            echo "running asdf plugin list"
-            asdf plugin list
-            echo "Checking mount"
-            ls -l /
-            echo $PATH
-            export PATH="$HOME/.asdf/shims:$PATH"
-            echo "running make install"
             make install
 
       - name: Check language tools used and setup trivy config
@@ -138,14 +118,10 @@ jobs:
           cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
       - name: convert python dependencies to requirements.txt
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             POETRY_VERSION=$(poetry --version | awk '{print $3}')
 
             if [[ "$(printf '%s\n' "2.0.0" "$POETRY_VERSION" "3.0.0" | sort -V | head -n1)" == "2.0.0" ]] \
@@ -158,14 +134,10 @@ jobs:
             poetry export -f requirements.txt --with dev --without-hashes --output=requirements.txt
       - name: download go dependencies
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             cd src
             go mod vendor
       - name: Check licenses
@@ -198,14 +170,10 @@ jobs:
             cat license_scan.txt
           fi
       - name: Run code lint
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             make lint
 
       - name: Run ShellCheck
@@ -218,14 +186,10 @@ jobs:
             .git
 
       - name: Run unit tests
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             make test
       - name: Generate SBOM
         uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
@@ -509,14 +473,10 @@ jobs:
 
       - name: Run cfn-lint
         if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             pip install cfn-lint
             cfn-lint -I "cloudformation/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
             cfn-lint -I "SAMtemplates/**/*.y*ml" 2>&1 | awk '/Run scan/ { print } /^[EW][0-9]/ { print; getline; print }'
@@ -526,37 +486,25 @@ jobs:
 
       - name: make install NodeJS
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             make install-node && make compile
 
       - name: Run cdk-synth
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             make cdk-synth
 
       - name: Init cfn-guard
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             set -eou pipefail
 
             rm -rf /tmp/ruleset
@@ -571,14 +519,10 @@ jobs:
 
       - name: Run cfn-guard script for sam templates
         if: steps.check_sam_templates.outputs.sam_exists == 'true'
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
             set -eou pipefail
 
             declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
@@ -602,15 +546,10 @@ jobs:
 
       - name: Run cfn-guard script for cloudformation templates
         if: steps.check_cf_templates.outputs.cf_exists == 'true'
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
-
             declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
             for ruleset in "${rulesets[@]}"
             do
@@ -625,15 +564,10 @@ jobs:
 
       - name: Run cfn-guard script for cdk templates
         if: steps.check_cdk.outputs.cdk_exists == 'true'
-        uses: addnab/docker-run-action@5ddaad0f7eedd03f64e412b1931852bd3031b273
+        uses: anthony-nhs/docker-run-action-fork@4d62f8d0e1ae07c4b0abad4eac02db8fa7bc984b
         with:
           image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
-          options: >
-            -v ${{ github.workspace }}:/work 
-            -u 1001:1001
           run: |
-            cd /work
-
             declare -a rulesets=("ncsc" "ncsc-cafv3" "wa-Reliability-Pillar" "wa-Security-Pillar")
             for ruleset in "${rulesets[@]}"
             do
