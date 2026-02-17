@@ -55,7 +55,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make install
 
@@ -63,14 +63,14 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make secrets-scan
       - name: Run actionlint
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make actionlint
 
@@ -125,7 +125,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-license-check
 
@@ -139,7 +139,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make lint
 
@@ -147,7 +147,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make shellcheck
 
@@ -155,14 +155,14 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make test
       - name: make generate sbom
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-generate-sbom
       - name: Upload sbom
@@ -176,7 +176,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-scan-python
 
@@ -185,7 +185,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-scan-node
       - name: Check go vulnerabilities
@@ -193,7 +193,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-scan-go
       - name: Check java vulnerabilities
@@ -201,7 +201,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-scan-java
       - name: Show vulnerability output
@@ -341,7 +341,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make install
 
@@ -350,7 +350,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make docker-build
 
@@ -358,7 +358,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make trivy-scan-docker
         env:
@@ -427,7 +427,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make cfn-lint
 
@@ -439,7 +439,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make install-node compile
 
@@ -448,7 +448,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make cdk-synth
 
@@ -456,7 +456,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make cfn-guard-sam-templates
 
@@ -465,7 +465,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make cfn-guard-cloudformation
       - name: Run cfn-guard script for cdk templates
@@ -473,7 +473,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make cfn-guard-cdk
 
@@ -501,7 +501,7 @@ jobs:
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
           workspace_folder: ${{ github.workspace }}
-          image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+          image: ${{ inputs.runtime_docker_image }}
           run: |
             make cfn-guard-terraform
 
