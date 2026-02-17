@@ -204,7 +204,7 @@ jobs:
           cd src
           go mod vendor
       - name: Check licenses
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -247,7 +247,7 @@ jobs:
       - name: Run unit tests
         run: make test
       - name: Generate SBOM
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -264,7 +264,7 @@ jobs:
 
       - name: Check python vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "fs"
           skip-files: "**/package-lock.json,**/go.mod,**/pom.xml"
@@ -277,7 +277,7 @@ jobs:
           trivy-config: trivy.yaml
       - name: Check node vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "fs"
           skip-files: "**/poetry.lock,**/go.mod,**/pom.xml"
@@ -290,7 +290,7 @@ jobs:
           trivy-config: trivy.yaml
       - name: Check go vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "fs"
           skip-files: "**/poetry.lock,**/package-lock.json,**/pom.xml"
@@ -302,7 +302,7 @@ jobs:
           exit-code: "1"
       - name: Check java vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "fs"
           skip-files: "**/poetry.lock,**/package-lock.json,**/go.mod"
@@ -486,7 +486,7 @@ jobs:
           make docker-build
 
       - name: Check docker vulnerabilities
-        uses: aquasecurity/trivy-action@b6643a29fecd7f34b3597bc6acb0a98b03d33ff8
+        uses: aquasecurity/trivy-action@c1824fd6edce30d7ab345a9989de00bbd46ef284
         with:
           scan-type: "image"
           image-ref: ${{ matrix.docker_image }}
