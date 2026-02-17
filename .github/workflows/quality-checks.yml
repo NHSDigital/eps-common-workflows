@@ -65,7 +65,7 @@ jobs:
           workspace_folder: ${{ github.workspace }}
           image: ${{ inputs.runtime_docker_image }}
           run: |
-            make secrets-scan
+            make secret-scan
       - name: Run actionlint
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
