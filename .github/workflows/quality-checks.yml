@@ -58,6 +58,7 @@ jobs:
           image: ${{ inputs.runtime_docker_image }}
           run: |
             make install
+            exit 1
 
       - name: Run secrets scan
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
