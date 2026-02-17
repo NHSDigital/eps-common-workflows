@@ -32,3 +32,6 @@ test:
 
 build:
 	echo "Not implemented"
+
+%:
+	@$(MAKE) -f /usr/local/share/eps/makefiles/common.mk $@

@@ -22,6 +22,7 @@ jobs:
       asdf_version: ${{ steps.asdf-version.outputs.version }}
       tag_format: ${{ steps.load-config.outputs.TAG_FORMAT }}
       devcontainer_version: ${{ steps.load-config.outputs.DEVCONTAINER_VERSION }}
+      devcontainer_image: ${{ steps.load-config.outputs.DEVCONTAINER_IMAGE }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -33,14 +34,18 @@ jobs:
         id: load-config
         run: |
           TAG_FORMAT=$(yq '.TAG_FORMAT' .github/config/settings.yml)
+          DEVCONTAINER_IMAGE=$(jq -r '.build.args.IMAGE_NAME' .devcontainer/devcontainer.json)
           DEVCONTAINER_VERSION=$(jq -r '.build.args.IMAGE_VERSION' .devcontainer/devcontainer.json)
-          echo "TAG_FORMAT=$TAG_FORMAT" >> "$GITHUB_OUTPUT"
-          echo "DEVCONTAINER_VERSION=$DEVCONTAINER_VERSION" >> "$GITHUB_OUTPUT"
+          {
+            echo "TAG_FORMAT=$TAG_FORMAT" 
+            echo "DEVCONTAINER_IMAGE=$DEVCONTAINER_IMAGE"
+            echo "DEVCONTAINER_VERSION=$DEVCONTAINER_VERSION"
+          } >> "$GITHUB_OUTPUT"
   quality_checks:
     uses: ./.github/workflows/quality-checks.yml
     needs: [get_config_values]
     with:
-      runtime_docker_image: "node_24_python_3_14:${{ needs.get_config_values.outputs.devcontainer_version }}"
+      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:github-actions-${{ needs.get_config_values.outputs.devcontainer_version }}"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   tag_release:
