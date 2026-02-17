@@ -58,6 +58,12 @@ jobs:
           image: ${{ inputs.runtime_docker_image }}
           run: |
             make install
+            echo "These are env vars"
+            echo "VAR1 is $VAR1"
+            echo "VAR2 is $VAR2"
+        env:
+          VAR1: value1
+          VAR2: value2
       - name: Run secrets scan
         uses: anthony-nhs/docker-run-action-fork@80b8bf1eaca8275e1c2b848cf7ea5fabb2443d78
         with:
