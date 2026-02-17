@@ -34,4 +34,4 @@ build:
 	echo "Not implemented"
 
 %:
-	@$(MAKE) -f /usr/local/share/eps/makefiles/common.mk $@
+	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@
