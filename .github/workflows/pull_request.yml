@@ -45,7 +45,7 @@ jobs:
     uses: ./.github/workflows/quality-checks.yml
     needs: [get_config_values]
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:github-actions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   tag_release:
