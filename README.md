@@ -157,6 +157,43 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 ```
 
+## quality checks - dev container version
+This workflow runs common quality checks using a prebuilt devcontainer (https://github.com/NHSDigital/eps-devcontainers).
+To use this, you must have overridden any common makefile targets described in https://github.com/NHSDigital/eps-devcontainers?tab=readme-ov-file#common-makefile-targets
+#### Inputs
+
+- `run_sonar`: Whether to run sonar checks or not.
+- `run_docker_scan`: whether to run a scan of docker images
+- `docker_images`: csv list of docker images to scan. These must match images produced by make docker-build
+- `runtime_docker_image`: the docker image to run everything on. This should just be the image name and tag pushed to https://github.com/NHSDigital/eps-devcontainers
+#### Secret Inputs
+- `SONAR_TOKEN`: Token used to authenticate to sonar
+
+#### Outputs
+
+None
+
+#### Example
+
+To use this workflow in your repository, call it from another workflow file:
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  quality_checks:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+    needs: [get_config_values]
+    with:
+      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      run_docker_scan: true
+      docker_images: fhir-facade,validator
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+```
 
 
 ## tag release
@@ -193,6 +230,49 @@ jobs:
     tagFormat: "v\\${version}-beta"
     dry_run: true
     asdfVersion: 0.18.0
+    branch_name: main
+    publish_package: false
+```
+
+## tag release - devcontainer version
+This workflow uses the semantic-release npm package to generate a new version tag, changelog, and github release for a repo.   
+*The devcontainer MUST have node installed*
+#### Inputs
+
+- `dry_run`: Whether to run in dry_run mode (do not create tags) or not
+- `branch_name`: The branch name to base the release on
+- `runtime_docker_image`: the docker image to run everything on. This should just be the image name and tag pushed to https://github.com/NHSDigital/eps-devcontainers
+- `publish_packages`: comma separated list of package folders to publish to an npm registry
+- `tagFormat`: Default `v\\${version}`. A template for the version tag.
+- `main_branch`: The branch to use for publishing. Defaults to main
+- `extra_artifact_name`: optional param to include an extra artifact in the release
+- `extra_artifact_id`: optional param of the extra artifact id to include in the release
+- `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
+- `extra_artifact_repository` optional param to indicate which repo the run to download the artifact was from
+
+#### Outputs
+
+- `version_tag`: The version tag created by semantic-release.
+- `change_set_version`: A timestamped string that con be used for creating changesets.
+
+#### Example
+
+To use this workflow in your repository, call it from another workflow file:
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  tag_release:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+    needs: [get_config_values]
+  with:
+    tagFormat: "v\\${version}-beta"
+    dry_run: true
+    runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
     branch_name: main
     publish_package: false
 ```

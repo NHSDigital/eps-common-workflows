@@ -1,0 +1,278 @@
+name: Tag Release
+
+on:
+    workflow_call:
+        inputs:
+            dry_run:
+                description: "Whether to run in dry-run mode (true) or create actual tags (false)"
+                required: true
+                type: boolean
+            branch_name:
+                description: "The branch name to base the release on"
+                required: true
+                type: string
+            runtime_docker_image:
+                type: string
+                required: true
+            publish_packages:
+                description: "comma separated list of package folders to publish to an npm registry"
+                required: false
+                type: string
+                default: ""
+            tag_format:
+                description: "The tag format to use for the release tags"
+                required: false
+                type: string
+                default: "v${version}"
+            main_branch:
+                description: "The main branch name for releases"
+                required: false
+                type: string
+                default: "main"
+            extra_artifact_name:
+                description: "An extra artifact to include in the release"
+                required: false
+                type: string
+            extra_artifact_id:
+                description: "An id for the extra artifact"
+                required: false
+                type: string
+            extra_artifact_run_id:
+                description: "An run id for the extra artifact"
+                required: false
+                type: string
+            extra_artifact_repository:
+                description: "An repository for the extra artifact"
+                required: false
+                type: string
+        outputs:
+            version_tag:
+                value: ${{ jobs.tag_release.outputs.version_tag }}
+            change_set_version:
+                description: "The change set version for deployments"
+                value: ${{ jobs.tag_release.outputs.change_set_version }}
+            next_version_tag:
+                description: "The next version tag that will be created"
+                value: ${{ jobs.tag_release.outputs.next_version_tag }}
+        secrets:
+            NPM_TOKEN:
+                required: false
+                description: "NPM token to publish packages"
+jobs:
+    tag_release:
+        runs-on: ubuntu-22.04
+        container:
+            image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+            options: --user 1001:1001 --group-add 128
+        defaults:
+            run:
+                shell: bash
+        outputs:
+            version_tag: ${{steps.output_version_tag.outputs.VERSION_TAG}}
+            change_set_version: ${{ steps.output_change_set_version.outputs.CHANGE_SET_VERSION }}
+            next_version_tag: ${{ steps.output_version_tag.outputs.NEXT_VERSION_TAG }}
+        steps:
+            - name: copy .tool-versions
+              run: |
+                  cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+            - name: Clone calling repo
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                  repository: ${{ github.repository }}
+                  ref: ${{ github.sha }}
+
+            - name: Checkout semantic-release workflow
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                  repository: NHSDigital/eps-common-workflows
+                  sparse-checkout-cone-mode: false
+                  path: common_workflow_config
+                  sparse-checkout: |
+                      package.json
+                      package-lock.json
+                      release.config.cjs
+                      releaseNotesTemplates/commit.hbs
+            - name: Install semantic release dependencies globally
+              run: |
+                  cd common_workflow_config
+                  dependencies="$(jq -r '.devDependencies | to_entries | map("\(.key)@\(.value)") | join(" ")' package.json)"
+                  echo "Installing: $dependencies"
+
+                  # shellcheck disable=SC2086
+                  npm install --global $dependencies
+                  echo "Copying semantic-release config and templates for use in the workflow"
+                  cp release.config.cjs ../ 
+                  mkdir -p ../releaseNotesTemplates 
+                  cp releaseNotesTemplates/commit.hbs ../releaseNotesTemplates/
+                  echo "Current dir is ${PWD}"
+            - name: Setup Git branch for semantic-release
+              run: |
+                  # When running from a PR, GitHub checks out a merge commit
+                  # We need to ensure we're on the actual branch for semantic-release
+                  git checkout -B "${BRANCH_NAME}"
+                  git branch --show-current
+              env:
+                  BRANCH_NAME: ${{ inputs.branch_name }}
+
+            - name: Install Dependencies and Build Package
+              if: inputs.publish_packages != ''
+              run: |
+                  make install
+                  make build
+
+            - name: Download extra artifact
+              if: ${{ inputs.extra_artifact_name != '' }}
+              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+              with:
+                  artifact-ids: ${{ inputs.extra_artifact_id }}
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  repository: ${{ inputs.extra_artifact_repository }}
+                  run-id: ${{ inputs.extra_artifact_run_id }}
+
+            - name: Set VERSION_TAG based on dry_run flag
+              id: output_version_tag
+              run: |
+                  if [ "${{ inputs.dry_run }}" = "true" ]; then
+                    # Determine semantic-release command based on branch
+                    if [ "${BRANCH_NAME}" = "${MAIN_BRANCH}" ]; then
+                      echo "on ${MAIN_BRANCH} branch"
+                      npx semantic-release --dry-run --tag-format "${TAG_FORMAT}" > semantic-release-output.log
+                      exit_code=1
+                    else
+                      # For non-main branches, override the branches configuration
+                      echo "overriding branches for semantic-release to ${BRANCH_NAME}"
+
+                      # we need to set GITHUB_REF and GITHUB_EVENT_NAME for semantic-release to work correctly
+                      # but need to ensure that actionlint does not complain about unused variables
+
+                      # shellcheck disable=SC2034
+                      GITHUB_REF=refs/heads/${BRANCH_NAME}
+                      # shellcheck disable=SC2034
+                      GITHUB_EVENT_NAME=push 
+                      echo "running semantic-release"
+                      npx semantic-release --dry-run --branches "${BRANCH_NAME}" --branch "${BRANCH_NAME}" --tag-format "${TAG_FORMAT}" > semantic-release-output.log
+                      echo "finish semantic-release with exit code $?"
+                      exit_code=0
+                    fi
+                    # Dry run mode: use short git SHA and get next version for summary
+                    VERSION_TAG=$(git rev-parse --short HEAD)
+                    echo "Getting next_version"
+                    NEXT_VERSION=$(grep -i 'The next release version is' semantic-release-output.log | sed -E 's/.* ([[:digit:].]+)$/\1/' || true)
+                    NEXT_VERSION=${NEXT_VERSION:-UNKNOWN}
+                    echo "got next version"
+                    # disabling shellcheck as replace does not work
+                    # shellcheck disable=SC2001
+                    NEW_VERSION_TAG=$(echo "$TAG_FORMAT" | sed "s/\${version}/$NEXT_VERSION/")
+                    echo "## VERSION TAG : ${VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
+                    echo "## NEXT TAG WILL BE : ${NEW_VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
+                    if [ "${NEXT_VERSION}" == "UNKNOWN" ]
+                    then
+                      echo "Could not get next tag. Here is the log from semantic-release"
+                      cat semantic-release-output.log
+                      exit ${exit_code}
+                    fi
+                  else
+                    # Production mode: get next version and create actual tag
+                    npx semantic-release --dry-run --tag-format "${TAG_FORMAT}" > semantic-release-output.log
+                    NEXT_VERSION=$(grep -i 'The next release version is' semantic-release-output.log | sed -E 's/.* ([[:digit:].]+)$/\1/')
+                    # disabling shellcheck as replace does not work
+                    # shellcheck disable=SC2001
+                    VERSION_TAG=$(echo "$TAG_FORMAT" | sed "s/\${version}/$NEXT_VERSION/")
+                    echo "## VERSION TAG : ${VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
+                  fi
+                  echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_OUTPUT"
+                  echo "VERSION_TAG=${VERSION_TAG}" >> "$GITHUB_ENV"
+                  echo "NEXT_VERSION_TAG=${NEW_VERSION_TAG}" >> "$GITHUB_OUTPUT"
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  BRANCH_NAME: ${{ inputs.branch_name }}
+                  PUBLISH_PACKAGES: ${{ inputs.publish_packages }}
+                  TAG_FORMAT: ${{ inputs.tag_format }}
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  MAIN_BRANCH: ${{ inputs.main_branch }}
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+
+            - name: Create semantic release tag
+              if: ${{ !inputs.dry_run }}
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  PUBLISH_PACKAGES: ${{ inputs.publish_packages }}
+                  TAG_FORMAT: ${{ inputs.tag_format }}
+                  MAIN_BRANCH: ${{ inputs.main_branch }}
+                  EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+              run: |
+                  npx semantic-release --tag-format "${TAG_FORMAT}"
+
+            - name: Get release for editing
+              if: ${{ !inputs.dry_run }}
+              id: get_release
+              # version 1.2.4
+              uses: cardinalby/git-get-release-action@5172c3a026600b1d459b117738c605fabc9e4e44
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+              with:
+                  tag: ${{ steps.output_version_tag.outputs.VERSION_TAG }}
+
+            - name: Edit Release
+              if: ${{ !inputs.dry_run }}
+              # version 1.2.0
+              uses: irongut/EditRelease@ccf529ad26dddf9996e7dd0f24ca5da4ea507cc2
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  id: ${{ steps.get_release.outputs.id }}
+                  body: |
+                      ## Info
+                      [Release workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) - Workflow ID: ${{ github.run_id }}
+
+                      It was initialized by [${{ github.event.sender.login }}](${{ github.event.sender.html_url }})
+
+            - name: Checkout gh-pages branch
+              if: ${{ !inputs.dry_run }}
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                  repository: ${{ github.repository }}
+                  ref: gh-pages
+                  path: gh-pages
+
+            - name: Publish release notes to gh-pages
+              if: ${{ !inputs.dry_run }}
+              working-directory: gh-pages
+              env:
+                  RELEASE_ID: ${{ steps.get_release.outputs.id }}
+                  VERSION_TAG: ${{ steps.output_version_tag.outputs.VERSION_TAG }}
+                  GH_REPO: ${{ github.repository }}
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  set -euo pipefail
+                  notes_dir="release_notes"
+                  mkdir -p "$notes_dir"
+                  note_file="$notes_dir/${VERSION_TAG}.md"
+
+                  gh api "/repos/${GH_REPO}/releases/${RELEASE_ID}" | jq -r '.body // ""' > "$note_file"
+
+                  if [ ! -s "$note_file" ]; then
+                      echo "Release notes are empty; skipping gh-pages update."
+                      exit 0
+                  fi
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+                  git add -f "$note_file"
+                  if git diff --cached --quiet; then
+                      echo "No changes detected in release notes; skipping commit."
+                      exit 0
+                  fi
+
+                  git commit -m "docs: add release notes for ${VERSION_TAG}"
+                  parallel --retries 10 --delay 3 ::: "git pull --rebase && git push"
+
+            - name: Output Change Set Version
+              id: output_change_set_version
+              shell: bash
+              run: |
+                  TIMESTAMP=$(date +%s)
+                  VERSION=$(echo ${{ steps.output_version_tag.outputs.VERSION_TAG }} | tr . -)
+                  echo CHANGE_SET_VERSION="$VERSION-$TIMESTAMP" >> "$GITHUB_OUTPUT"
