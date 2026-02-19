@@ -27,7 +27,7 @@ on:
 
 jobs:
   verify_attestation:
-    uses: ./.github/workflows/verify_attestation.yml
+    uses: ./.github/workflows/verify-attestation.yml
     with:
       runtime_docker_image: "${{ inputs.runtime_docker_image }}"
       use_published_from_main_image: false
