@@ -45,6 +45,9 @@ on:
                 description: "An repository for the extra artifact"
                 required: false
                 type: string
+            use_published_from_main_image:
+                required: true
+                type: boolean
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -63,7 +66,7 @@ jobs:
         uses: ./.github/workflows/verify_attestation.yml
         with:
             runtime_docker_image: "${{ inputs.runtime_docker_image }}"
-            use_published_from_main_image: false
+            use_published_from_main_image: ${{ inputs.use_published_from_main_image }}
     tag_release:
         runs-on: ubuntu-22.04
         needs: verify_attestation
