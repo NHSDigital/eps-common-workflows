@@ -97,7 +97,9 @@ jobs:
                   PINNED_IMAGE="${IMAGE_BASE}@${RESOLVED_DIGEST}"
                   echo "resolved_digest=${RESOLVED_DIGEST}" >> "$GITHUB_OUTPUT"
                   echo "pinned_image=${PINNED_IMAGE}" >> "$GITHUB_OUTPUT"
-                  echo "Resolved and matched digest for ${IMAGE_REF}: ${RESOLVED_DIGEST}"
+                  echo "Resolved image reference: ${IMAGE_REF}"
+                  echo "Resolved digest: ${RESOLVED_DIGEST}"
+                  echo "Resolved image reference: ${PINNED_IMAGE}"
 
             - name: Verify attestation
               shell: bash
@@ -131,6 +133,5 @@ jobs:
                     args+=("--bundle-from-oci")
                   fi
 
-                  echo "Running attestation verification with arguments: ${args[*]}"
                   GH_FORCE_TTY=120 gh attestation verify "${args[@]}" 2>&1 
                   echo "Verified attestation for ${PINNED_IMAGE}"
