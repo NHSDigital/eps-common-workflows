@@ -41,13 +41,13 @@ name: Verify image digest and attestation
         outputs:
             pinned_image:
                 description: Fully-qualified digest-pinned image reference
-                value: ${{ jobs.verify.outputs.pinned_image }}
+                value: ${{ jobs.verify_attestation.outputs.pinned_image }}
             resolved_digest:
                 description: Resolved digest for the supplied image reference
-                value: ${{ jobs.verify.outputs.resolved_digest }}
+                value: ${{ jobs.verify_attestation.outputs.resolved_digest }}
 
 jobs:
-    verify:
+    verify_attestation:
         runs-on: ubuntu-22.04
         permissions:
             contents: read
@@ -132,6 +132,5 @@ jobs:
                   fi
 
                   echo "Running attestation verification with arguments: ${args[*]}"
-                  gh attestation verify "${args[@]}" 2>&1
- 
+                  GH_FORCE_TTY=120 gh attestation verify "${args[@]}" 2>&1 
                   echo "Verified attestation for ${PINNED_IMAGE}"
