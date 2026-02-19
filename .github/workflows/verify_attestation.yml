@@ -21,23 +21,15 @@ name: Verify image digest and attestation
             signer_workflow:
                 required: false
                 type: string
-                default: ""
+                default: ".github/workflows/build_multi_arch_image.yml@refs/heads/main"
             signer_repo:
                 required: false
                 type: string
-                default: ""
-            source_ref:
-                required: false
-                type: string
-                default: ""
+                default: "NHSDigital/eps-devcontainers"
             predicate_type:
                 required: false
                 type: string
                 default: https://slsa.dev/provenance/v1
-            bundle_from_oci:
-                required: false
-                type: boolean
-                default: false
         outputs:
             pinned_image:
                 description: Fully-qualified digest-pinned image reference
@@ -108,9 +100,7 @@ jobs:
                   OWNER: ${{ inputs.owner }}
                   SIGNER_WORKFLOW: ${{ inputs.signer_workflow }}
                   SIGNER_REPO: ${{ inputs.signer_repo }}
-                  SOURCE_REF: ${{ inputs.source_ref }}
                   PREDICATE_TYPE: ${{ inputs.predicate_type }}
-                  BUNDLE_FROM_OCI: ${{ inputs.bundle_from_oci }}
                   PINNED_IMAGE: ${{ steps.resolve.outputs.pinned_image }}
               run: |
                   set -euo pipefail
@@ -123,14 +113,6 @@ jobs:
 
                   if [[ -n "$SIGNER_REPO" ]]; then
                     args+=("--signer-repo" "$SIGNER_REPO")
-                  fi
-
-                  if [[ -n "$SOURCE_REF" ]]; then
-                    args+=("--source-ref" "$SOURCE_REF")
-                  fi
-
-                  if [[ "$BUNDLE_FROM_OCI" == "true" ]]; then
-                    args+=("--bundle-from-oci")
                   fi
 
                   GH_FORCE_TTY=120 gh attestation verify "${args[@]}" 2>&1 

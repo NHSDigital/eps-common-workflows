@@ -6,7 +6,7 @@
     "args": {
       "DOCKER_GID": "${env:DOCKER_GID:}",
       "IMAGE_NAME": "node_24_python_3_14",
-      "IMAGE_VERSION": "ci-228a6e2",
+      "IMAGE_VERSION": "pr-23-d823049",
       "USER_UID": "${localEnv:USER_ID:}",
       "USER_GID": "${localEnv:GROUP_ID:}"
     },
