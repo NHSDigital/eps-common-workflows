@@ -1,0 +1,135 @@
+name: Verify image digest and attestation
+"on":
+    workflow_call:
+        inputs:
+            runtime_docker_image:
+                required: true
+                type: string
+                description: Image reference as name:tag (for example node_24_python_3_12:v1.2.3) or fully qualified image ref
+            registry:
+                required: false
+                type: string
+                default: ghcr.io
+            namespace:
+                required: false
+                type: string
+                default: nhsdigital/eps-devcontainers
+            owner:
+                required: false
+                type: string
+                default: NHSDigital
+            signer_workflow:
+                required: false
+                type: string
+                default: ""
+            signer_repo:
+                required: false
+                type: string
+                default: ""
+            source_ref:
+                required: false
+                type: string
+                default: ""
+            predicate_type:
+                required: false
+                type: string
+                default: https://slsa.dev/provenance/v1
+            bundle_from_oci:
+                required: false
+                type: boolean
+                default: false
+        outputs:
+            pinned_image:
+                description: Fully-qualified digest-pinned image reference
+                value: ${{ jobs.verify.outputs.pinned_image }}
+            resolved_digest:
+                description: Resolved digest for the supplied image reference
+                value: ${{ jobs.verify.outputs.resolved_digest }}
+
+jobs:
+    verify:
+        runs-on: ubuntu-22.04
+        permissions:
+            contents: read
+            packages: read
+            attestations: read
+        outputs:
+            pinned_image: ${{ steps.resolve.outputs.pinned_image }}
+            resolved_digest: ${{ steps.resolve.outputs.resolved_digest }}
+        steps:
+            - name: Login to github container registry
+              if: startsWith(inputs.registry, 'ghcr.io')
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Resolve digest and validate expected value
+              id: resolve
+              shell: bash
+              env:
+                  RUNTIME_DOCKER_IMAGE: ${{ inputs.runtime_docker_image }}
+                  REGISTRY: ${{ inputs.registry }}
+                  NAMESPACE: ${{ inputs.namespace }}
+              run: |
+                  set -euo pipefail
+
+                  if [[ "$RUNTIME_DOCKER_IMAGE" == *"/"* ]]; then
+                    IMAGE_REF="$RUNTIME_DOCKER_IMAGE"
+                  else
+                    IMAGE_REF="${REGISTRY}/${NAMESPACE}/${RUNTIME_DOCKER_IMAGE}"
+                  fi
+
+                  if [[ "$IMAGE_REF" == *@sha256:* ]]; then
+                    IMAGE_BASE="${IMAGE_REF%@*}"
+                    RESOLVED_DIGEST="${IMAGE_REF#*@}"
+                  else
+                    RESOLVED_DIGEST="$(docker buildx imagetools inspect "$IMAGE_REF" | awk '/^Digest:/ {print $2; exit}')"
+                    IMAGE_BASE="${IMAGE_REF%:*}"
+                  fi
+
+                  if [[ -z "$RESOLVED_DIGEST" ]]; then
+                    echo "Could not resolve digest for image: $IMAGE_REF" >&2
+                    exit 1
+                  fi
+
+                  PINNED_IMAGE="${IMAGE_BASE}@${RESOLVED_DIGEST}"
+                  echo "resolved_digest=${RESOLVED_DIGEST}" >> "$GITHUB_OUTPUT"
+                  echo "pinned_image=${PINNED_IMAGE}" >> "$GITHUB_OUTPUT"
+                  echo "Resolved and matched digest for ${IMAGE_REF}: ${RESOLVED_DIGEST}"
+
+            - name: Verify attestation
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  OWNER: ${{ inputs.owner }}
+                  SIGNER_WORKFLOW: ${{ inputs.signer_workflow }}
+                  SIGNER_REPO: ${{ inputs.signer_repo }}
+                  SOURCE_REF: ${{ inputs.source_ref }}
+                  PREDICATE_TYPE: ${{ inputs.predicate_type }}
+                  BUNDLE_FROM_OCI: ${{ inputs.bundle_from_oci }}
+                  PINNED_IMAGE: ${{ steps.resolve.outputs.pinned_image }}
+              run: |
+                  set -euo pipefail
+
+                  args=("oci://${PINNED_IMAGE}" "--owner" "$OWNER" "--predicate-type" "$PREDICATE_TYPE")
+
+                  if [[ -n "$SIGNER_WORKFLOW" ]]; then
+                    args+=("--signer-workflow" "$SIGNER_WORKFLOW")
+                  fi
+
+                  if [[ -n "$SIGNER_REPO" ]]; then
+                    args+=("--signer-repo" "$SIGNER_REPO")
+                  fi
+
+                  if [[ -n "$SOURCE_REF" ]]; then
+                    args+=("--source-ref" "$SOURCE_REF")
+                  fi
+
+                  if [[ "$BUNDLE_FROM_OCI" == "true" ]]; then
+                    args+=("--bundle-from-oci")
+                  fi
+
+                  gh attestation verify "${args[@]}"
+                  echo "Verified attestation for ${PINNED_IMAGE}"
