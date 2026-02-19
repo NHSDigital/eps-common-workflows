@@ -30,7 +30,7 @@ jobs:
     uses: ./.github/workflows/verify-attestation.yml
     with:
       runtime_docker_image: "${{ inputs.runtime_docker_image }}"
-      use_published_from_main_image: false
+      verify_published_from_main_image: false
   quality_checks:
     runs-on: ubuntu-22.04
     needs: verify_attestation

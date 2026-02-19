@@ -18,7 +18,7 @@ name: Verify image digest and attestation
                 required: false
                 type: string
                 default: NHSDigital
-            use_published_from_main_image:
+            verify_published_from_main_image:
                 required: false
                 type: boolean
                 default: true
@@ -94,7 +94,7 @@ jobs:
               env:
                   GH_TOKEN: ${{ github.token }}
                   OWNER: ${{ inputs.owner }}
-                  USE_PUBLISHED_FROM_MAIN_IMAGE: ${{ inputs.use_published_from_main_image }}
+                  VERIFY_PUBLISHED_FROM_MAIN_IMAGE: ${{ inputs.verify_published_from_main_image }}
                   PREDICATE_TYPE: ${{ inputs.predicate_type }}
                   PINNED_IMAGE: ${{ steps.resolve.outputs.pinned_image }}
               run: |
@@ -102,7 +102,7 @@ jobs:
 
                   args=("oci://${PINNED_IMAGE}" "--owner" "$OWNER" "--predicate-type" "$PREDICATE_TYPE")
 
-                  if [[ "$USE_PUBLISHED_FROM_MAIN_IMAGE" == "true" ]]; then
+                  if [[ "$VERIFY_PUBLISHED_FROM_MAIN_IMAGE" == "true" ]]; then
                     args+=("--source-ref" "refs/heads/main")
                   fi
 
