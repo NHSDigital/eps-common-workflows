@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-22.04
     needs: verify_attestation
     container:
-      image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -212,8 +212,9 @@ jobs:
 
   get_docker_images_to_scan:
     runs-on: ubuntu-22.04
+    needs: verify_attestation
     container:
-      image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -281,9 +282,9 @@ jobs:
 
   docker_vulnerability_scan:
     runs-on: ubuntu-22.04
-    needs: [get_docker_images_to_scan]
+    needs: [get_docker_images_to_scan, verify_attestation]
     container:
-      image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -324,8 +325,9 @@ jobs:
 
   IaC-validation:
     runs-on: ubuntu-22.04
+    needs: verify_attestation
     container:
-      image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:

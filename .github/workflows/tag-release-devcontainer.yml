@@ -59,10 +59,15 @@ on:
                 required: false
                 description: "NPM token to publish packages"
 jobs:
+    verify_attestation:
+        uses: ./.github/workflows/verify_attestation.yml
+        with:
+            runtime_docker_image: "${{ inputs.runtime_docker_image }}"
     tag_release:
         runs-on: ubuntu-22.04
+        needs: verify_attestation
         container:
-            image: ghcr.io/nhsdigital/eps-devcontainers/${{ inputs.runtime_docker_image }}
+            image: ${{ needs.verify_attestation.outputs.pinned_image }}
             options: --user 1001:1001 --group-add 128
         defaults:
             run:

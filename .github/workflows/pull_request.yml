@@ -37,11 +37,6 @@ jobs:
             echo "DEVCONTAINER_IMAGE=$DEVCONTAINER_IMAGE"
             echo "DEVCONTAINER_VERSION=$DEVCONTAINER_VERSION"
           } >> "$GITHUB_OUTPUT"
-  verify_attestation:
-    needs: get_config_values
-    uses: ./.github/workflows/verify_attestation.yml
-    with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
   quality_checks:
     uses: ./.github/workflows/quality-checks-devcontainer.yml
     needs: [get_config_values]
