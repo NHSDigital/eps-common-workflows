@@ -53,7 +53,7 @@ jobs:
                   username: ${{ github.actor }}
                   password: ${{ secrets.GITHUB_TOKEN }}
 
-            - name: Resolve digest and validate expected value
+            - name: Resolve digest
               id: resolve
               shell: bash
               env:
