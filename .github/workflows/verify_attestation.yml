@@ -18,14 +18,10 @@ name: Verify image digest and attestation
                 required: false
                 type: string
                 default: NHSDigital
-            signer_workflow:
+            source_ref:
                 required: false
                 type: string
-                default: ".github/workflows/build_multi_arch_image.yml@refs/heads/main"
-            signer_repo:
-                required: false
-                type: string
-                default: "NHSDigital/eps-devcontainers"
+                default: ""
             predicate_type:
                 required: false
                 type: string
@@ -98,8 +94,7 @@ jobs:
               env:
                   GH_TOKEN: ${{ github.token }}
                   OWNER: ${{ inputs.owner }}
-                  SIGNER_WORKFLOW: ${{ inputs.signer_workflow }}
-                  SIGNER_REPO: ${{ inputs.signer_repo }}
+                  SOURCE_REF: ${{ inputs.source_ref }}
                   PREDICATE_TYPE: ${{ inputs.predicate_type }}
                   PINNED_IMAGE: ${{ steps.resolve.outputs.pinned_image }}
               run: |
@@ -107,13 +102,10 @@ jobs:
 
                   args=("oci://${PINNED_IMAGE}" "--owner" "$OWNER" "--predicate-type" "$PREDICATE_TYPE")
 
-                  if [[ -n "$SIGNER_WORKFLOW" ]]; then
-                    args+=("--signer-workflow" "$SIGNER_WORKFLOW")
+                  if [[ -n "$SOURCE_REF" ]]; then
+                    args+=("--source-ref" "$SOURCE_REF")
                   fi
 
-                  if [[ -n "$SIGNER_REPO" ]]; then
-                    args+=("--signer-repo" "$SIGNER_REPO")
-                  fi
 
                   GH_FORCE_TTY=120 gh attestation verify "${args[@]}" 2>&1 
                   echo "Verified attestation for ${PINNED_IMAGE}"
