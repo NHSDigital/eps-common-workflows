@@ -1,0 +1,111 @@
+name: Verify image digest and attestation
+"on":
+    workflow_call:
+        inputs:
+            runtime_docker_image:
+                required: true
+                type: string
+                description: Image reference as name:tag (for example node_24_python_3_12:v1.2.3) or fully qualified image ref
+            registry:
+                required: false
+                type: string
+                default: ghcr.io
+            namespace:
+                required: false
+                type: string
+                default: nhsdigital/eps-devcontainers
+            owner:
+                required: false
+                type: string
+                default: NHSDigital
+            verify_published_from_main_image:
+                required: false
+                type: boolean
+                default: true
+            predicate_type:
+                required: false
+                type: string
+                default: https://slsa.dev/provenance/v1
+        outputs:
+            pinned_image:
+                description: Fully-qualified digest-pinned image reference
+                value: ${{ jobs.verify_attestation.outputs.pinned_image }}
+            resolved_digest:
+                description: Resolved digest for the supplied image reference
+                value: ${{ jobs.verify_attestation.outputs.resolved_digest }}
+
+jobs:
+    verify_attestation:
+        runs-on: ubuntu-22.04
+        permissions:
+            contents: read
+            packages: read
+            attestations: read
+        outputs:
+            pinned_image: ${{ steps.resolve.outputs.pinned_image }}
+            resolved_digest: ${{ steps.resolve.outputs.resolved_digest }}
+        steps:
+            - name: Login to github container registry
+              if: startsWith(inputs.registry, 'ghcr.io')
+              uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Resolve digest
+              id: resolve
+              shell: bash
+              env:
+                  RUNTIME_DOCKER_IMAGE: ${{ inputs.runtime_docker_image }}
+                  REGISTRY: ${{ inputs.registry }}
+                  NAMESPACE: ${{ inputs.namespace }}
+              run: |
+                  set -euo pipefail
+
+                  if [[ "$RUNTIME_DOCKER_IMAGE" == *"/"* ]]; then
+                    IMAGE_REF="$RUNTIME_DOCKER_IMAGE"
+                  else
+                    IMAGE_REF="${REGISTRY}/${NAMESPACE}/${RUNTIME_DOCKER_IMAGE}"
+                  fi
+
+                  if [[ "$IMAGE_REF" == *@sha256:* ]]; then
+                    IMAGE_BASE="${IMAGE_REF%@*}"
+                    RESOLVED_DIGEST="${IMAGE_REF#*@}"
+                  else
+                    RESOLVED_DIGEST="$(docker buildx imagetools inspect "$IMAGE_REF" | awk '/^Digest:/ {print $2; exit}')"
+                    IMAGE_BASE="${IMAGE_REF%:*}"
+                  fi
+
+                  if [[ -z "$RESOLVED_DIGEST" ]]; then
+                    echo "Could not resolve digest for image: $IMAGE_REF" >&2
+                    exit 1
+                  fi
+
+                  PINNED_IMAGE="${IMAGE_BASE}@${RESOLVED_DIGEST}"
+                  echo "resolved_digest=${RESOLVED_DIGEST}" >> "$GITHUB_OUTPUT"
+                  echo "pinned_image=${PINNED_IMAGE}" >> "$GITHUB_OUTPUT"
+                  echo "Resolved image reference: ${IMAGE_REF}"
+                  echo "Resolved digest: ${RESOLVED_DIGEST}"
+                  echo "Resolved image reference: ${PINNED_IMAGE}"
+
+            - name: Verify attestation
+              shell: bash
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  OWNER: ${{ inputs.owner }}
+                  VERIFY_PUBLISHED_FROM_MAIN_IMAGE: ${{ inputs.verify_published_from_main_image }}
+                  PREDICATE_TYPE: ${{ inputs.predicate_type }}
+                  PINNED_IMAGE: ${{ steps.resolve.outputs.pinned_image }}
+              run: |
+                  set -euo pipefail
+
+                  args=("oci://${PINNED_IMAGE}" "--owner" "$OWNER" "--predicate-type" "$PREDICATE_TYPE")
+
+                  if [[ "$VERIFY_PUBLISHED_FROM_MAIN_IMAGE" == "true" ]]; then
+                    args+=("--source-ref" "refs/heads/main")
+                  fi
+
+
+                  GH_FORCE_TTY=120 gh attestation verify "${args[@]}" 2>&1 
+                  echo "Verified attestation for ${PINNED_IMAGE}"

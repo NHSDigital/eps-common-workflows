@@ -1,15 +1,18 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
-  "name": "Ubuntu",
-  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "name": "eps-common-workflows",
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
     "args": {
-      "DOCKER_GID": "${env:DOCKER_GID:}"
-    }
+      "DOCKER_GID": "${env:DOCKER_GID:}",
+      "IMAGE_NAME": "node_24_python_3_14",
+      "IMAGE_VERSION": "v1.0.6",
+      "USER_UID": "${localEnv:USER_ID:}",
+      "USER_GID": "${localEnv:GROUP_ID:}"
+    },
+    "updateRemoteUserUID": false
   },
+  "postAttachCommand": "git-secrets --register-aws; git-secrets --add-provider -- cat /usr/share/secrets-scanner/nhsd-rules-deny.txt",
   "mounts": [
     "source=${env:HOME}${env:USERPROFILE}/.aws,target=/home/vscode/.aws,type=bind",
     "source=${env:HOME}${env:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind",
@@ -20,15 +23,7 @@
   "remoteEnv": {
     "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
   },
-  "postAttachCommand": "make install && docker build -f /workspaces/eps-common-workflows/dockerfiles/nhsd-git-secrets.dockerfile -t git-secrets . && pre-commit install --install-hooks -f",
-  "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-      "version": "latest",
-      "moby": "true",
-      "installDockerBuildx": "true"
-    }
-  },
+  "features": {},
   "customizations": {
     "vscode": {
       "extensions": [
