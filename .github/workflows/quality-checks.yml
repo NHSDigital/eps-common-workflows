@@ -182,7 +182,7 @@ jobs:
           fi
           touch trivy.yaml
       - name: Update trivy config to include dev dependencies
-        uses: mikefarah/yq@2be0094729a1006f61e8339ce9934bfb3cbb549f
+        uses: mikefarah/yq@5a7e72a743649b1b3a47d1a1d8214f3453173c51
         with:
           cmd: yq -i '.pkg.include-dev-deps = true' 'trivy.yaml'
       - name: convert python dependencies to requirements.txt
