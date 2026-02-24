@@ -1,0 +1,448 @@
+name: Quality Checks
+
+on:
+  workflow_call:
+    secrets:
+      SONAR_TOKEN:
+        required: false
+    inputs:
+      run_sonar:
+        type: boolean
+        description: Toggle to run sonar code analyis on this repository.
+        default: true
+        required: false
+      run_docker_scan:
+        type: boolean
+        description: Toggle to run docker vulnerability scan on this repository.
+        default: false
+        required: false
+      docker_images:
+        type: string
+        description: comma separated list of docker image references to scan when docker scanning is enabled.
+        default: ""
+        required: false
+      runtime_docker_image:
+        type: string
+        required: true
+
+jobs:
+  verify_attestation:
+    uses: ./.github/workflows/verify-attestation.yml
+    with:
+      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
+      verify_published_from_main_image: false
+  quality_checks:
+    runs-on: ubuntu-22.04
+    needs: verify_attestation
+    container:
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - &init_tool_versions
+        name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+      - &checkout
+        name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - &setup_npmrc
+        name: Setting up .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - &cache_npm
+        name: Cache npm dependencies
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
+      - name: make install
+        run: |
+          make install
+      - name: Run secrets scan
+        run: |
+          make secret-scan
+      - name: Run actionlint
+        run: |
+          make actionlint
+
+      - name: Check language tools used and setup trivy config
+        id: check_languages
+        run: |
+          if [ -f "pyproject.toml" ] && grep -q '\[tool.poetry\]' "pyproject.toml"; then
+            echo "****************"
+            echo "Detected a poetry project"
+            echo "****************"
+            echo "uses_poetry=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use poetry"
+            echo "****************"
+            echo "uses_poetry=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f pom.xml ]; then
+            echo "****************"
+            echo "Detected a Java project"
+            echo "****************"
+            echo "uses_java=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Java"
+            echo "****************"
+            echo "uses_java=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f package-lock.json ]; then
+            echo "****************"
+            echo "Detected a Node.js project"
+            echo "****************"
+            echo "uses_node=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Node.js"
+            echo "****************"
+            echo "uses_node=false" >> "$GITHUB_OUTPUT"
+          fi
+          if [ -f src/go.sum ]; then
+            echo "****************"
+            echo "Detected a Go project"
+            echo "****************"
+            echo "uses_go=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not use Go"
+            echo "****************"
+            echo "uses_go=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Check licenses
+        run: |
+          make trivy-license-check
+
+      - name: Show license scan output
+        if: always()
+        run: |
+          if [ -f license_scan.txt ]; then
+            cat .trivy_out/license_scan.txt
+          fi
+      - name: Run code lint
+        run: |
+          make lint
+
+      - name: Run ShellCheck
+        run: |
+          make shellcheck
+
+      - name: Run unit tests
+        run: |
+          make test
+      - name: make generate sbom
+        run: |
+          make trivy-generate-sbom
+      - name: Upload sbom
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: sbom.cdx.json
+          path: .trivy_out/sbom.cdx.json
+
+      - name: Check python vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        run: |
+          make trivy-scan-python
+
+      - name: Check node vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        run: |
+          make trivy-scan-node
+      - name: Check go vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        run: |
+          make trivy-scan-go
+      - name: Check java vulnerabilities
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        run: |
+          make trivy-scan-java
+      - name: Show vulnerability output
+        if: always()
+        run: |
+          if [ -f .trivy_out/dependency_results_python.txt ]; then
+            cat .trivy_out/dependency_results_python.txt
+          fi
+          if [ -f .trivy_out/dependency_results_node.txt ]; then
+            cat .trivy_out/dependency_results_node.txt
+          fi
+          if [ -f .trivy_out/dependency_results_java.txt ]; then
+            cat .trivy_out/dependency_results_java.txt
+          fi
+          if [ -f .trivy_out/dependency_results_go.txt ]; then
+            cat .trivy_out/dependency_results_go.txt
+          fi
+      - name: "check is SONAR_TOKEN exists"
+        env:
+          super_secret: ${{ secrets.SONAR_TOKEN }}
+        if: ${{ env.super_secret != '' && inputs.run_sonar == true }}
+        run: echo "SONAR_TOKEN_EXISTS=true" >> "$GITHUB_ENV"
+
+      - name: Run SonarQube analysis
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        run: |
+          # issues with sonar scanner and sslcontext-kickstart 9.1.0, forcing re-download
+          rm -rf ~/.m2/repository/io/github/hakky54/sslcontext-kickstart/9.1.0
+          mvn dependency:get -U -Dartifact=io.github.hakky54:sslcontext-kickstart:9.1.0
+          # run sonar scan
+          mvn sonar:sonar -Dsonar.token="$SONAR_TOKEN"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
+        if: ${{ steps.check_languages.outputs.uses_java == 'false' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  get_docker_images_to_scan:
+    runs-on: ubuntu-22.04
+    needs: verify_attestation
+    container:
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
+    outputs:
+      docker_images: ${{ steps.normalized_docker_images.outputs.images }}
+    steps:
+      - *init_tool_versions
+      - *checkout
+      - name: Determine docker images to scan
+        id: normalized_docker_images
+        env:
+          DOCKER_IMAGES: ${{ inputs.docker_images }}
+        run: |
+          if [ "${{ inputs.run_docker_scan }}" != "true" ]; then
+            echo "Docker scanning disabled; emitting empty image list."
+            echo 'images=[]' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          INPUT="${DOCKER_IMAGES}"
+
+          if [ -z "$INPUT" ]; then
+            INPUT="[]"
+          fi
+
+          normalize_to_json_array() {
+            local raw="$1"
+
+            # If the input already looks like JSON, return as-is
+            if echo "$raw" | grep -q '^[[:space:]]*\['; then
+              echo "$raw"
+              return
+            fi
+
+            local json="["
+            local first=true
+            IFS=',' read -ra ITEMS <<< "$raw"
+            for item in "${ITEMS[@]}"; do
+              # Trim whitespace around each image reference
+              item=$(echo "$item" | xargs)
+              if [ -z "$item" ]; then
+                continue
+              fi
+              if [ "$first" = true ]; then
+                first=false
+              else
+                json+=", "
+              fi
+              json+="\"$item\""
+            done
+            json+="]"
+            echo "$json"
+          }
+
+          NORMALIZED=$(normalize_to_json_array "$INPUT")
+
+          if [ "$NORMALIZED" = "[]" ]; then
+            echo "No docker images provided"
+            exit 1
+          fi
+
+          echo "Using provided docker images: $NORMALIZED"
+          echo "images=$NORMALIZED" >> "$GITHUB_OUTPUT"
+
+  docker_vulnerability_scan:
+    runs-on: ubuntu-22.04
+    needs: [get_docker_images_to_scan, verify_attestation]
+    container:
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
+    if: ${{ inputs.run_docker_scan == true }}
+    strategy:
+      matrix:
+        docker_image: ${{ fromJson(needs.get_docker_images_to_scan.outputs.docker_images) }}
+    steps:
+      - *init_tool_versions
+      - *checkout
+      - *setup_npmrc
+      - *cache_npm
+
+      - name: make install
+        run: |
+          make install
+
+      - name: Build docker images
+        run: |
+          make docker-build
+        env:
+          DOCKER_IMAGE: ${{ matrix.docker_image }}
+
+      - name: Check docker vulnerabilities
+        run: |
+          make trivy-scan-docker
+        env:
+          DOCKER_IMAGE: ${{ matrix.docker_image }}
+
+      - name: Show docker vulnerability output
+        if: always()
+        run: |
+          echo "Scan output for ${{ matrix.docker_image }}"
+          if [ -f .trivy_out/dependency_results_docker.txt ]; then
+            cat .trivy_out/dependency_results_docker.txt
+          fi
+
+  IaC-validation:
+    runs-on: ubuntu-22.04
+    needs: verify_attestation
+    container:
+      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      options: --user 1001:1001 --group-add 128
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - *init_tool_versions
+      - *checkout
+      - *setup_npmrc
+      - *cache_npm
+
+      - name: Check for SAM templates
+        id: check_sam_templates
+        run: |
+          if [ -d "SAMtemplates" ]; then
+            echo "****************"
+            echo "Project has SAM templates"
+            echo "****************"
+            echo "sam_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not have SAM templates"
+            echo "****************"
+            echo "sam_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for cloudformation templates
+        id: check_cf_templates
+        run: |
+          if [ -d "cloudformation" ]; then
+            echo "****************"
+            echo "Project has cloudformation templates"
+            echo "****************"
+            echo "cf_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not have cloudformation templates"
+            echo "****************"
+            echo "cf_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Check for cdk
+        id: check_cdk
+        run: |
+          if [ -d "packages/cdk" ]; then
+            echo "****************"
+            echo "Project has cdk"
+            echo "****************"
+            echo "cdk_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "****************"
+            echo "Project does not have cdk"
+            echo "****************"
+            echo "cdk_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run cfn-lint
+        if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
+        run: |
+          make cfn-lint
+
+      - name: make install NodeJS
+        if: steps.check_cdk.outputs.cdk_exists == 'true'
+        run: |
+          make install-node compile
+
+      - name: Run cdk-synth
+        if: steps.check_cdk.outputs.cdk_exists == 'true'
+        run: |
+          make cdk-synth
+
+      - name: Run cfn-guard script for sam templates
+        run: |
+          make cfn-guard-sam-templates
+
+      - name: Run cfn-guard script for cloudformation templates
+        if: steps.check_cf_templates.outputs.cf_exists == 'true'
+        run: |
+          make cfn-guard-cloudformation
+      - name: Run cfn-guard script for cdk templates
+        if: steps.check_cdk.outputs.cdk_exists == 'true'
+        run: |
+          make cfn-guard-cdk
+
+      - name: Download terraform plans
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        with:
+          pattern: "*_terraform_plan"
+          path: terraform_plans/
+          merge-multiple: true
+
+      - name: Check terraform plans exist
+        id: check_terraform_plans
+        run: |
+          if [ ! -d terraform_plans ]; then
+            echo "Terraform plans not present."
+            echo "terraform_plans_exist=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Terraform plans present:"
+            ls -l terraform_plans/
+            echo "terraform_plans_exist=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run cfn-guard script for terraform plans
+        if: steps.check_terraform_plans.outputs.terraform_plans_exist == 'true'
+        run: |
+          make cfn-guard-terraform
+
+      - name: Show cfn-guard output
+        if: failure()
+        run: find .cfn_guard_out -type f -print0 | xargs -0 cat
+
+      - name: Upload cfn_guard_output
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: cfn_guard_output
+          path: .cfn_guard_out

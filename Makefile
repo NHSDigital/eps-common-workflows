@@ -14,12 +14,8 @@ install-hooks: install-python
 deep-clean:
 	find . -name 'node_modules' -type d -prune -exec rm -rf '{}' +
 
-check-licenses: check-licenses-python
-
-check-licenses-python:
-	scripts/check_python_licenses.sh
-
 lint: lint-githubactions lint-githubaction-scripts
+	echo "Linting complete"
 
 lint-githubactions:
 	actionlint
@@ -32,3 +28,6 @@ test:
 
 build:
 	echo "Not implemented"
+
+%:
+	@$(MAKE) -f /usr/local/share/eps/Mk/common.mk $@
