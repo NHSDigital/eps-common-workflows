@@ -9,9 +9,9 @@ The workflows that are available to use are
 - [Combine Dependabot PRs](#combine-dependabot-prs)
 - [Dependabot Auto Approve and Merge](#dependabot-auto-approve-and-merge)
 - [PR Title Check](#pr-title-check)
+- [Get Repo Config](#get-repo-config)
 - [Quality Checks](#quality-checks)
 - [Quality Checks - Dev Container Version](#quality-checks---dev-container-version)
-- [Verify Image Digest and Attestation](#verify-image-digest-and-attestation)
 - [Tag Release](#tag-release)
 - [Tag Release - Devcontainer Version](#tag-release---devcontainer-version)
 
@@ -127,6 +127,41 @@ jobs:
     uses: NHSDigital/eps-common-workflows/.github/workflows/pr_title_check.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
 ```
 
+## Get Repo Config
+
+This workflow extracts common config values, including the devcontainer image and version. This image then has its attestations verified, and provides a pinned image reference that can be used in downstream workflows.
+
+#### Inputs
+
+- `registry`: Container registry host. Default: `ghcr.io`
+- `namespace`: Image namespace/repository prefix. Default: `nhsdigital/eps-devcontainers`
+- `owner`: GitHub owner used by `gh attestation verify --owner`. Default: `NHSDigital`
+- `verify_published_from_main_image`: If true, verifies attestations published from `refs/heads/main`. Default: `true`
+- `predicate_type`: Attestation predicate type. Default: `https://slsa.dev/provenance/v1`
+
+#### Outputs
+
+- `tag_format`: The tag format to use for releases.
+- `devcontainer_image`: The devcontainer image name as defined in `.devcontainer/devcontainer.json`.
+- `devcontainer_version`: The version of the devcontainer image.
+- `pinned_image`: The fully-qualified digest-pinned image reference.
+- `resolved_digest`: The resolved digest for the devcontainer image.
+
+#### Example
+
+To use this workflow in your repository, call it from another workflow file:
+
+```yaml
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  get_config_values:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+```
+
 ## Quality Checks
 This workflow runs common quality checks.   
 To use this, you must have the following Makefile targets defined
@@ -182,7 +217,7 @@ To use this, you must have overridden any common makefile targets described in h
 - `run_sonar`: Whether to run Sonar checks or not.
 - `run_docker_scan`: whether to run a scan of Docker images
 - `docker_images`: csv list of Docker images to scan. These must match images produced by make docker-build
-- `runtime_docker_image`: the Docker image to run everything on. This should just be the image name and tag pushed to https://github.com/NHSDigital/eps-devcontainers
+- `pinned_image`: A pinned, verified image version upon which to run the container.
 #### Secret Inputs
 - `SONAR_TOKEN`: Token used to authenticate to Sonar
 
@@ -201,56 +236,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  get_config_values:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+
   quality_checks:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
     needs: [get_config_values]
     with:
-      runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
+      pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       run_docker_scan: true
       docker_images: fhir-facade,validator
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 ```
-
-## Verify Image Digest and Attestation
-This workflow resolves an image reference to a pinned digest and verifies GitHub artifact attestation for that image.
-
-#### Inputs
-
-- `runtime_docker_image`: Image reference as `name:tag` (for example `node_24_python_3_12:v1.2.3`) or a fully qualified image reference.
-- `registry`: Container registry host. Default: `ghcr.io`
-- `namespace`: Image namespace/repository prefix. Default: `nhsdigital/eps-devcontainers`
-- `owner`: GitHub owner used by `gh attestation verify --owner`. Default: `NHSDigital`
-- `verify_published_from_main_image`: If true, verifies attestations published from `refs/heads/main`. Default: `true`
-- `predicate_type`: Attestation predicate type. Default: `https://slsa.dev/provenance/v1`
-
-#### Outputs
-
-- `pinned_image`: Fully-qualified digest-pinned image reference.
-- `resolved_digest`: Resolved digest for the supplied image reference.
-
-#### Example
-
-To use this workflow in your repository, call it from another workflow file:
-
-```yaml
-name: Verify Devcontainer Image
-
-on:
-  workflow_dispatch:
-
-jobs:
-  verify_attestation:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/verify-attestation.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-    with:
-      runtime_docker_image: node_24_python_3_12:githubactions-v1.2.3
-      registry: ghcr.io
-      namespace: nhsdigital/eps-devcontainers
-      owner: NHSDigital
-      verify_published_from_main_image: true
-      predicate_type: https://slsa.dev/provenance/v1
-```
-
 
 ## Tag Release
 This workflow uses the semantic-release npm package to generate a new version tag, changelog, and GitHub release for a repo.
@@ -258,16 +256,21 @@ This workflow uses the semantic-release npm package to generate a new version ta
 #### Inputs
 
 - `dry_run`: Whether to run in dry_run mode (do not create tags) or not
-- `tagFormat`: Default `v\\${version}`. A template for the version tag.
+- `tag_format`: Default `v\\${version}`. A template for the version tag.
 - `branch_name`: The branch name to base the release on
-- `publish_package`: Default false. If true, semantic-release will publish npm package.
+- `publish_packages`: comma separated list of package folders to publish to an npm registry
 - `asdfVersion`: Override the version of asdf to install.
 - `main_branch`: The branch to use for publishing. Defaults to main
+- `extra_artifact_name`: optional param to include an extra artifact in the release
+- `extra_artifact_id`: optional param of the extra artifact id to include in the release
+- `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
+- `extra_artifact_repository`: optional param to indicate which repo the run to download the artifact was from
 
 #### Outputs
 
 - `version_tag`: The version tag created by semantic-release.
 - `change_set_version`: A timestamped string that can be used for creating changesets.
+- `next_version_tag`: The next version tag that will be created.
 
 #### Example
 
@@ -282,12 +285,12 @@ on:
 jobs:
   tag_release:
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-  with:
-    tagFormat: "v\\${version}-beta"
-    dry_run: true
-    asdfVersion: 0.18.0
-    branch_name: main
-    publish_package: false
+    with:
+      tag_format: "v\\${version}-beta"
+      dry_run: true
+      asdfVersion: 0.18.0
+      branch_name: main
+      publish_packages: ""
 ```
 
 ## Tag Release - Devcontainer Version
@@ -297,20 +300,20 @@ This workflow uses the semantic-release npm package to generate a new version ta
 
 - `dry_run`: Whether to run in dry_run mode (do not create tags) or not
 - `branch_name`: The branch name to base the release on
-- `runtime_docker_image`: the Docker image to run everything on. This should just be the image name and tag pushed to https://github.com/NHSDigital/eps-devcontainers
+- `pinned_image`: A pinned, verified image version upon which to run the container.
 - `publish_packages`: comma separated list of package folders to publish to an npm registry
-- `tagFormat`: Default `v\\${version}`. A template for the version tag.
+- `tag_format`: Default `v\\${version}`. A template for the version tag.
 - `main_branch`: The branch to use for publishing. Defaults to main
 - `extra_artifact_name`: optional param to include an extra artifact in the release
 - `extra_artifact_id`: optional param of the extra artifact id to include in the release
 - `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
-- `extra_artifact_repository` optional param to indicate which repo the run to download the artifact was from
-- `verify_published_from_main_image` indicates if we should verify the image was published from main branch in eps-devcontainers
+- `extra_artifact_repository`: optional param to indicate which repo the run to download the artifact was from
 
 #### Outputs
 
 - `version_tag`: The version tag created by semantic-release.
 - `change_set_version`: A timestamped string that can be used for creating changesets.
+- `next_version_tag`: The next version tag that will be created.
 
 #### Example
 
@@ -323,15 +326,18 @@ on:
   workflow_dispatch:
 
 jobs:
+  get_config_values:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+
   tag_release:
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
     needs: [get_config_values]
-  with:
-    tagFormat: "v\\${version}-beta"
-    dry_run: true
-    runtime_docker_image: "${{ needs.get_config_values.outputs.devcontainer_image }}:githubactions-${{ needs.get_config_values.outputs.devcontainer_version }}"
-    branch_name: main
-    publish_package: false
+    with:
+      tag_format: "v\\${version}-beta"
+      dry_run: true
+      pinned_image: "${{ needs.get_config_values.outputs.pinned_image }}"
+      branch_name: main
+      publish_packages: ""
 ```
 
 
