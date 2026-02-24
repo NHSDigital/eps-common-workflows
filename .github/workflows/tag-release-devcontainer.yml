@@ -11,7 +11,7 @@ on:
                 description: "The branch name to base the release on"
                 required: true
                 type: string
-            runtime_docker_image:
+            pinned_image:
                 type: string
                 required: true
             publish_packages:
@@ -62,16 +62,10 @@ on:
                 required: false
                 description: "NPM token to publish packages"
 jobs:
-    verify_attestation:
-        uses: ./.github/workflows/verify-attestation.yml
-        with:
-            runtime_docker_image: "${{ inputs.runtime_docker_image }}"
-            verify_published_from_main_image: ${{ inputs.verify_published_from_main_image }}
     tag_release:
         runs-on: ubuntu-22.04
-        needs: verify_attestation
         container:
-            image: ${{ needs.verify_attestation.outputs.pinned_image }}
+            image: ${{ inputs.pinned_image }}
             options: --user 1001:1001 --group-add 128
         defaults:
             run:
