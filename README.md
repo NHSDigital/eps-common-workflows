@@ -142,9 +142,9 @@ This workflow extracts common config values, including the devcontainer image an
 #### Outputs
 
 - `tag_format`: The tag format to use for releases.
-- `devcontainer_image`: The pinned image reference for the devcontainer image.
+- `devcontainer_image`: The devcontainer image name as defined in `.devcontainer/devcontainer.json`.
 - `devcontainer_version`: The version of the devcontainer image.
-- `pinned_image`: The pinned image reference for the devcontainer image.
+- `pinned_image`: The fully-qualified digest-pinned image reference.
 - `resolved_digest`: The resolved digest for the devcontainer image.
 
 #### Example
@@ -240,7 +240,7 @@ jobs:
     uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
 
   quality_checks:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks-devcontainer.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
     needs: [get_config_values]
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
@@ -256,16 +256,21 @@ This workflow uses the semantic-release npm package to generate a new version ta
 #### Inputs
 
 - `dry_run`: Whether to run in dry_run mode (do not create tags) or not
-- `tagFormat`: Default `v\\${version}`. A template for the version tag.
+- `tag_format`: Default `v\\${version}`. A template for the version tag.
 - `branch_name`: The branch name to base the release on
-- `publish_package`: Default false. If true, semantic-release will publish npm package.
+- `publish_packages`: comma separated list of package folders to publish to an npm registry
 - `asdfVersion`: Override the version of asdf to install.
 - `main_branch`: The branch to use for publishing. Defaults to main
+- `extra_artifact_name`: optional param to include an extra artifact in the release
+- `extra_artifact_id`: optional param of the extra artifact id to include in the release
+- `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
+- `extra_artifact_repository`: optional param to indicate which repo the run to download the artifact was from
 
 #### Outputs
 
 - `version_tag`: The version tag created by semantic-release.
 - `change_set_version`: A timestamped string that can be used for creating changesets.
+- `next_version_tag`: The next version tag that will be created.
 
 #### Example
 
@@ -280,12 +285,12 @@ on:
 jobs:
   tag_release:
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-  with:
-    tagFormat: "v\\${version}-beta"
-    dry_run: true
-    asdfVersion: 0.18.0
-    branch_name: main
-    publish_package: false
+    with:
+      tag_format: "v\\${version}-beta"
+      dry_run: true
+      asdfVersion: 0.18.0
+      branch_name: main
+      publish_packages: ""
 ```
 
 ## Tag Release - Devcontainer Version
@@ -297,18 +302,19 @@ This workflow uses the semantic-release npm package to generate a new version ta
 - `branch_name`: The branch name to base the release on
 - `pinned_image`: A pinned, verified image version upon which to run the container.
 - `publish_packages`: comma separated list of package folders to publish to an npm registry
-- `tagFormat`: Default `v\\${version}`. A template for the version tag.
+- `tag_format`: Default `v\\${version}`. A template for the version tag.
 - `main_branch`: The branch to use for publishing. Defaults to main
 - `extra_artifact_name`: optional param to include an extra artifact in the release
 - `extra_artifact_id`: optional param of the extra artifact id to include in the release
 - `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
-- `extra_artifact_repository` optional param to indicate which repo the run to download the artifact was from
-- `verify_published_from_main_image` indicates if we should verify the image was published from main branch in eps-devcontainers
+- `extra_artifact_repository`: optional param to indicate which repo the run to download the artifact was from
+- `verify_published_from_main_image`: indicates if we should verify the image was published from main branch in eps-devcontainers
 
 #### Outputs
 
 - `version_tag`: The version tag created by semantic-release.
 - `change_set_version`: A timestamped string that can be used for creating changesets.
+- `next_version_tag`: The next version tag that will be created.
 
 #### Example
 
@@ -327,12 +333,13 @@ jobs:
   tag_release:
     uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release-devcontainer.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
     needs: [get_config_values]
-  with:
-    tagFormat: "v\\${version}-beta"
-    dry_run: true
-    pinned_image: "${{ needs.get_config_values.outputs.pinned_image }}"
-    branch_name: main
-    publish_package: false
+    with:
+      tag_format: "v\\${version}-beta"
+      dry_run: true
+      pinned_image: "${{ needs.get_config_values.outputs.pinned_image }}"
+      branch_name: main
+      publish_packages: ""
+      verify_published_from_main_image: true
 ```
 
 
