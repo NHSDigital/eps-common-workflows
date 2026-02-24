@@ -21,21 +21,15 @@ on:
         description: comma separated list of docker image references to scan when docker scanning is enabled.
         default: ""
         required: false
-      runtime_docker_image:
+      pinned_image:
         type: string
         required: true
 
 jobs:
-  verify_attestation:
-    uses: ./.github/workflows/verify-attestation.yml
-    with:
-      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
-      verify_published_from_main_image: false
   quality_checks:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -213,9 +207,8 @@ jobs:
 
   get_docker_images_to_scan:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -283,9 +276,9 @@ jobs:
 
   docker_vulnerability_scan:
     runs-on: ubuntu-22.04
-    needs: [get_docker_images_to_scan, verify_attestation]
+    needs: get_docker_images_to_scan
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -326,9 +319,8 @@ jobs:
 
   IaC-validation:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
