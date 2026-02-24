@@ -26,7 +26,7 @@ jobs:
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
   tag_release:
-    needs: [quality_checks, get_config_values]
+    needs: get_config_values
     uses: ./.github/workflows/tag-release-devcontainer.yml
     permissions:
       contents: read
