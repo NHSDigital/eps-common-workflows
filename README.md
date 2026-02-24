@@ -308,7 +308,6 @@ This workflow uses the semantic-release npm package to generate a new version ta
 - `extra_artifact_id`: optional param of the extra artifact id to include in the release
 - `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
 - `extra_artifact_repository`: optional param to indicate which repo the run to download the artifact was from
-- `verify_published_from_main_image`: indicates if we should verify the image was published from main branch in eps-devcontainers
 
 #### Outputs
 
@@ -339,7 +338,6 @@ jobs:
       pinned_image: "${{ needs.get_config_values.outputs.pinned_image }}"
       branch_name: main
       publish_packages: ""
-      verify_published_from_main_image: true
 ```
 
 

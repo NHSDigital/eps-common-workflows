@@ -25,5 +25,4 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: main
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-      verify_published_from_main_image: true
     secrets: inherit

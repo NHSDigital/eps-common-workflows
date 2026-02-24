@@ -14,10 +14,15 @@ jobs:
     secrets:
       AUTOMERGE_APP_ID: ${{ secrets.AUTOMERGE_APP_ID }}
       AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
+  
   pr_title_format_check:
     uses: ./.github/workflows/pr_title_check.yml
+
   get_config_values:
     uses: ./.github/workflows/get-repo-config.yml
+    with:
+      verify_published_from_main_image: false
+
   quality_checks:
     uses: ./.github/workflows/quality-checks-devcontainer.yml
     needs: [get_config_values]
@@ -25,6 +30,7 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      
   tag_release:
     needs: get_config_values
     uses: ./.github/workflows/tag-release-devcontainer.yml
@@ -37,5 +43,4 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: ${{ github.event.pull_request.head.ref }}
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-      verify_published_from_main_image: false
     secrets: inherit
