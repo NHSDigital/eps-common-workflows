@@ -5,6 +5,10 @@ const commitTemplate = readFileSync("./releaseNotesTemplates/commit.hbs").toStri
 const publish_packages = process.env.PUBLISH_PACKAGES?.split(",").map(s => s.trim()).filter(s => s.length > 0) || []
 const mainBranch = process.env.MAIN_BRANCH || "main"
 
+const pypiPublish = process.env.PYPI_PUBLISH || false
+const pypiTestPublish = process.env.PYPI_TEST_PUBLISH || false
+const pypiRepoUrl = pypiTestPublish ? "https://test.pypi.org/legacy/" : "https://upload.pypi.org/legacy/"
+
 module.exports = {
     branches: [
         {
@@ -73,6 +77,13 @@ module.exports = {
                 pkgRoot: subpackage
             }
         ]),
+        [
+            "semantic-release-pypi",
+            {
+                pypiPublish, pypiPublish,
+                repoUrl: pypiRepoUrl
+            }
+        ],
         [
             "@semantic-release/github",
             {
