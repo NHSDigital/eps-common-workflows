@@ -46,6 +46,16 @@ on:
                 description: "An repository for the extra artifact"
                 required: false
                 type: string
+            pypi_publish:
+                description: "Whether to publish to PyPI"
+                required: false
+                type: boolean
+                default: false
+            pypi_test_publish:
+                description: "Whether to publish to Test PyPI"
+                required: false
+                type: boolean
+                default: false
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -71,6 +81,7 @@ jobs:
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
                   repository: NHSDigital/eps-common-workflows
+                  ref: aea-5986-publish-fame-library
                   sparse-checkout-cone-mode: false
                   sparse-checkout: |
                       package.json
@@ -249,7 +260,7 @@ jobs:
                   PYTHON_CONFIGURE_OPTS: --enable-shared
 
             - name: Install Dependencies and Build Package
-              if: inputs.publish_packages != ''
+              if: inputs.publish_packages != '' || inputs.pypi_publish != ''
               run: |
                   make install
                   make build
@@ -320,6 +331,8 @@ jobs:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
+                  PYPI_TEST_PUBLISH: ${{ inputs.pypi_test_publish }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
