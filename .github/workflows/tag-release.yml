@@ -69,6 +69,12 @@ on:
             NPM_TOKEN:
                 required: false
                 description: "NPM token to publish packages"
+            PYPI_TOKEN:
+                required: false
+                description: "PyPI token to publish packages"
+            PYPI_TEST_TOKEN:
+                required: false
+                description: "Test PyPI token to publish packages to test index"
 jobs:
     install_semantic_release:
         # Install asdf

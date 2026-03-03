@@ -8,6 +8,7 @@ const mainBranch = process.env.MAIN_BRANCH || "main"
 const pypiPublish = process.env.PYPI_PUBLISH || false
 const pypiTestPublish = process.env.PYPI_TEST_PUBLISH || false
 const pypiRepoUrl = pypiTestPublish ? "https://test.pypi.org/legacy/" : "https://upload.pypi.org/legacy/"
+const pypiToken = pypiTestPublish ? process.env.PYPI_TEST_TOKEN : process.env.PYPI_TOKEN
 
 module.exports = {
     branches: [
@@ -81,7 +82,8 @@ module.exports = {
             "semantic-release-pypi",
             {
                 pypiPublish, pypiPublish,
-                repoUrl: pypiRepoUrl
+                repoUrl: pypiRepoUrl,
+                repoToken: pypiToken
             }
         ],
         [
