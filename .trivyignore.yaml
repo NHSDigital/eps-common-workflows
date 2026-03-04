@@ -16,6 +16,12 @@ vulnerabilities:
   - id: CVE-2026-26996
     statement: minimatch vulnerability accepted as risk
     expired_at: 2026-06-01
+  - id: CVE-2026-27903
+    statement: minimatch vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
+  - id: CVE-2026-27904
+    statement: minimatch vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
   - id: CVE-2026-26960
     statement: tar vulnerability accepted as risk
     expired_at: 2026-06-01
