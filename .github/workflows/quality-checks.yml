@@ -263,7 +263,7 @@ jobs:
           path: sbom.cdx.json
 
       - name: Check python vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' && failure()}}
+        if: ${{always() && steps.check_languages.outputs.uses_poetry == 'true'}}
         uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           scan-type: "fs"
