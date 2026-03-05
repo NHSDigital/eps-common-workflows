@@ -76,6 +76,14 @@ module.exports = {
                 pkgRoot: subpackage
             }
         ]),
+        ...(pypiPublish ? [
+            [
+                "semantic-release-pypi",
+                {
+                    repoToken: pypiToken
+                }
+            ]
+        ] : []),
         [
             "@semantic-release/github",
             {
