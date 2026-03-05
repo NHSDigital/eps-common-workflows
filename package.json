@@ -17,7 +17,7 @@
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "conventional-changelog-eslint": "^6.0.0",
+    "conventional-changelog-eslint": "^6.1.0",
     "semantic-release": "^25.0.3",
     "semantic-release-pypi": "^5.1.3"
   }
