@@ -263,7 +263,7 @@ jobs:
           path: sbom.cdx.json
 
       - name: Check python vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        if: ${{ always() && steps.check_languages.outputs.uses_poetry == 'true'}}
         uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           scan-type: "fs"
@@ -276,7 +276,7 @@ jobs:
           exit-code: "1"
           trivy-config: trivy.yaml
       - name: Check node vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        if: ${{ always() && steps.check_languages.outputs.uses_node == 'true' }}
         uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           scan-type: "fs"
@@ -289,7 +289,7 @@ jobs:
           exit-code: "1"
           trivy-config: trivy.yaml
       - name: Check go vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        if: ${{ always() && steps.check_languages.outputs.uses_go == 'true' }}
         uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           scan-type: "fs"
@@ -301,7 +301,7 @@ jobs:
           output: "dependency_results_go.txt"
           exit-code: "1"
       - name: Check java vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        if: ${{ always() && steps.check_languages.outputs.uses_java == 'true' }}
         uses: aquasecurity/trivy-action@97e0b3872f55f89b95b2f65b3dbab56962816478
         with:
           scan-type: "fs"
