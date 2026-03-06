@@ -11,10 +11,9 @@ on:
                 description: "The branch name to base the release on"
                 required: true
                 type: string
-            asdfVersion:
+            pinned_image:
                 type: string
-                required: false
-                default: "0.18.0"
+                required: true
             publish_packages:
                 description: "comma separated list of package folders to publish to an npm registry"
                 required: false
@@ -46,11 +45,6 @@ on:
                 description: "An repository for the extra artifact"
                 required: false
                 type: string
-            pypi_publish:
-                description: "Whether to publish to PyPI"
-                required: false
-                type: boolean
-                default: false
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -64,166 +58,53 @@ on:
             NPM_TOKEN:
                 required: false
                 description: "NPM token to publish packages"
-            PYPI_TOKEN:
-                required: false
-                description: "PyPI token to publish packages"
 jobs:
-    install_semantic_release:
-        # Install asdf
-        # Use npm install -g to install semantic release and plugins globally
-        ## These are installed in the asdf npm version
-        # Bundle .asdf and upload as artifact
-        runs-on: ubuntu-22.04
-        steps:
-            - name: Checkout semantic-release workflow
-              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-              with:
-                  repository: NHSDigital/eps-common-workflows
-                  sparse-checkout-cone-mode: false
-                  sparse-checkout: |
-                      package.json
-                      package-lock.json
-                      .tool-versions
-                      release.config.cjs
-                      releaseNotesTemplates/commit.hbs
-
-            - name: Calculate asdf cache key
-              id: asdf_cache_key
-              run: |
-                  base="${{ runner.os }}-asdf-${{ inputs.asdfVersion }}"
-                  key="$base-${{ hashFiles('**/.tool-versions') }}"
-
-                  echo "base=$base" >> "$GITHUB_OUTPUT"
-                  echo "key=$key" >> "$GITHUB_OUTPUT"
-
-            - name: Calculate installed cache key
-              id: installed_cache_key
-              run: |
-                  base="${{ steps.asdf_cache_key.outputs.key }}-npm"
-                  key="$base-${{ hashFiles('**/package-lock.json') }}"
-
-                  echo "base=$base" >> "$GITHUB_OUTPUT"
-                  echo "key=$key" >> "$GITHUB_OUTPUT"
-
-            - name: Calculate artifact cache key
-              id: artifact_cache_key
-              run: |
-                  base="${{ steps.installed_cache_key.outputs.key }}"
-                  key="$base-artifact"
-
-                  echo "base=$base" >> "$GITHUB_OUTPUT"
-                  echo "key=$key" >> "$GITHUB_OUTPUT"
-
-            - name: Cache asdf artifact
-              id: asdf_artifact_cache
-              uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-              with:
-                  path: asdf.tar.gz
-                  key: ${{ steps.artifact_cache_key.outputs.key }}
-                  restore-keys: ${{ steps.artifact_cache_key.outputs.base }}*
-
-            - name: Cache asdf with installed npm packages
-              if: ${{ steps.asdf_artifact_cache.outputs.cache-hit != 'true' }}
-              id: installed_cache
-              uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-              with:
-                  path: ~/.asdf
-                  key: ${{ steps.installed_cache_key.outputs.key }}
-                  restore-keys: ${{ steps.installed_cache_key.outputs.base }}*
-
-            - name: Cache asdf
-              if: ${{ steps.installed_cache.outcome == 'success' && steps.installed_cache.outputs.cache-hit != 'true' }}
-              id: asdf_cache
-              uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
-              with:
-                  path: ~/.asdf
-                  key: ${{ steps.asdf_cache_key.outputs.key }}
-                  restore-keys: |
-                      ${{ steps.asdf_cache_key.outputs.base }}*
-
-            - name: Install asdf dependencies in .tool-versions
-              if: ${{ steps.asdf_cache.outputs.cache-hit == 'false' || steps.asdf_cache.outcome != 'skipped' }}
-              uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-              with:
-                  asdf_version: ${{ inputs.asdfVersion }}
-
-            - name: Install semantic release dependencies globally
-              if: ${{ steps.installed_cache.outputs.cache-hit == 'false' || steps.installed_cache.outcome != 'skipped' }}
-              run: |
-                  dependencies="$(jq -r '.devDependencies | to_entries | map("\(.key)@\(.value)") | join(" ")' package.json)"
-                  echo "Installing: $dependencies"
-
-                  # shellcheck disable=SC2086
-                  npm install --global $dependencies
-
-            - name: Prepare asdf artifact
-              if: ${{ steps.asdf_artifact_cache.outputs.cache-hit != 'true' }}
-              run: |
-                  tar -czf asdf.tar.gz -C "$HOME" .asdf
-
-            - name: Upload asdf artifact
-              uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-              with:
-                  name: asdf_artifact
-                  path: asdf.tar.gz
-                  overwrite: true
-
-            - name: Prepare config artifact
-              run: |
-                  mkdir -p config_artifact/releaseNotesTemplates
-                  cp release.config.cjs config_artifact/
-                  cp releaseNotesTemplates/commit.hbs config_artifact/releaseNotesTemplates/
-
-            - name: Upload config artifact
-              uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-              with:
-                  name: config_artifact
-                  path: config_artifact/
-                  overwrite: true
-
     tag_release:
-        needs: install_semantic_release
         runs-on: ubuntu-22.04
+        container:
+            image: ${{ inputs.pinned_image }}
+            options: --user 1001:1001 --group-add 128
+        defaults:
+            run:
+                shell: bash
         outputs:
             version_tag: ${{steps.output_version_tag.outputs.VERSION_TAG}}
             change_set_version: ${{ steps.output_change_set_version.outputs.CHANGE_SET_VERSION }}
             next_version_tag: ${{ steps.output_version_tag.outputs.NEXT_VERSION_TAG }}
         steps:
-            - name: Fetch asdf artifact
-              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
-              with:
-                  name: asdf_artifact
-            - name: Install asdf
-              uses: asdf-vm/actions/setup@b7bcd026f18772e44fe1026d729e1611cc435d47
-              with:
-                  asdf_version: ${{ inputs.asdfVersion }}
-
-            - name: Extract asdf
-              run: tar -xzf asdf.tar.gz -C "$HOME"
-
-            - name: Setup node from cache
+            - name: copy .tool-versions
               run: |
-                  # Get installed node version (trim whitespace with xargs)
-                  NODE_VER=$(asdf list nodejs | head -n1 | xargs)
-                  NODE_DIR="$HOME/.asdf/installs/nodejs/$NODE_VER"
-
-                  echo "Using Node $NODE_VER from cache at $NODE_DIR"
-                  asdf set -u nodejs "$NODE_VER"
-
-                  # Prepend binaries to path
-                  echo "$NODE_DIR/bin" >> "$GITHUB_PATH"
-                  echo "$NODE_DIR/lib/node_modules/.bin" >> "$GITHUB_PATH"
-
-                  # # Set node path to resolve packages
-                  # NODE_PATH="$NODE_DIR/lib/node_modules"
-                  # echo "NODE_PATH=$NODE_PATH" >> $GITHUB_ENV
-
+                  cp /home/vscode/.tool-versions "$HOME/.tool-versions"
             - name: Clone calling repo
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
                   repository: ${{ github.repository }}
                   ref: ${{ github.sha }}
 
+            - name: Checkout semantic-release workflow
+              uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+              with:
+                  repository: NHSDigital/eps-common-workflows
+                  sparse-checkout-cone-mode: false
+                  path: common_workflow_config
+                  sparse-checkout: |
+                      package.json
+                      package-lock.json
+                      release.config.cjs
+                      releaseNotesTemplates/commit.hbs
+            - name: Install semantic release dependencies globally
+              run: |
+                  cd common_workflow_config
+                  dependencies="$(jq -r '.devDependencies | to_entries | map("\(.key)@\(.value)") | join(" ")' package.json)"
+                  echo "Installing: $dependencies"
+
+                  # shellcheck disable=SC2086
+                  npm install --global $dependencies
+                  echo "Copying semantic-release config and templates for use in the workflow"
+                  cp release.config.cjs ../ 
+                  mkdir -p ../releaseNotesTemplates 
+                  cp releaseNotesTemplates/commit.hbs ../releaseNotesTemplates/
+                  echo "Current dir is ${PWD}"
             - name: Setup Git branch for semantic-release
               run: |
                   # When running from a PR, GitHub checks out a merge commit
@@ -233,31 +114,8 @@ jobs:
               env:
                   BRANCH_NAME: ${{ inputs.branch_name }}
 
-            - name: Fetch semantic-release config
-              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
-              with:
-                  name: config_artifact
-
-            - name: Cache asdf
-              if: ${{ inputs.publish_packages != '' || inputs.pypi_publish }}
-              uses: actions/cache@v5
-              with:
-                  path: |
-                      ~/.asdf
-                  key: ${{ runner.os }}-asdf-${{ hashFiles('**/.tool-versions') }}
-                  restore-keys: |
-                      ${{ runner.os }}-asdf-
-
-            - name: Install asdf dependencies in .tool-versions
-              if: ${{ inputs.publish_packages != '' || inputs.pypi_publish }}
-              uses: asdf-vm/actions/install@b7bcd026f18772e44fe1026d729e1611cc435d47
-              with:
-                  asdf_version: ${{ inputs.asdfVersion }}
-              env:
-                  PYTHON_CONFIGURE_OPTS: --enable-shared
-
             - name: Install Dependencies and Build Package
-              if: ${{ inputs.publish_packages != '' || inputs.pypi_publish }}
+              if: inputs.publish_packages != ''
               run: |
                   make install
                   make build
@@ -291,18 +149,23 @@ jobs:
                       GITHUB_REF=refs/heads/${BRANCH_NAME}
                       # shellcheck disable=SC2034
                       GITHUB_EVENT_NAME=push 
+                      echo "running semantic-release"
                       npx semantic-release --dry-run --branches "${BRANCH_NAME}" --branch "${BRANCH_NAME}" --tag-format "${TAG_FORMAT}" > semantic-release-output.log
+                      echo "finish semantic-release with exit code $?"
                       exit_code=0
                     fi
                     # Dry run mode: use short git SHA and get next version for summary
                     VERSION_TAG=$(git rev-parse --short HEAD)
-                    NEXT_VERSION=$(grep -i 'The next release version is' semantic-release-output.log | sed -E 's/.* ([[:digit:].]+)$/\1/')
+                    echo "Getting next_version"
+                    NEXT_VERSION=$(grep -i 'The next release version is' semantic-release-output.log | sed -E 's/.* ([[:digit:].]+)$/\1/' || true)
+                    NEXT_VERSION=${NEXT_VERSION:-UNKNOWN}
+                    echo "got next version"
                     # disabling shellcheck as replace does not work
                     # shellcheck disable=SC2001
                     NEW_VERSION_TAG=$(echo "$TAG_FORMAT" | sed "s/\${version}/$NEXT_VERSION/")
                     echo "## VERSION TAG : ${VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
                     echo "## NEXT TAG WILL BE : ${NEW_VERSION_TAG}" >> "$GITHUB_STEP_SUMMARY"
-                    if [ -z "${NEXT_VERSION}" ]
+                    if [ "${NEXT_VERSION}" == "UNKNOWN" ]
                     then
                       echo "Could not get next tag. Here is the log from semantic-release"
                       cat semantic-release-output.log
@@ -328,8 +191,6 @@ jobs:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
-                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
-                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -340,8 +201,6 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
-                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
-                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
