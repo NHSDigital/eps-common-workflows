@@ -257,7 +257,7 @@ jobs:
                   PYTHON_CONFIGURE_OPTS: --enable-shared
 
             - name: Install Dependencies and Build Package
-              if: ${{ inputs.publish_packages != '' || inputs.pypi_publish }}
+              if: ${{ inputs.publish_packages != '' }}
               run: |
                   make install
                   make build
