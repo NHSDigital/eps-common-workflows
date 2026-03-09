@@ -162,7 +162,7 @@ jobs:
                   tar -czf asdf.tar.gz -C "$HOME" .asdf
 
             - name: Upload asdf artifact
-              uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+              uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
               with:
                   name: asdf_artifact
                   path: asdf.tar.gz
@@ -175,7 +175,7 @@ jobs:
                   cp releaseNotesTemplates/commit.hbs config_artifact/releaseNotesTemplates/
 
             - name: Upload config artifact
-              uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+              uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
               with:
                   name: config_artifact
                   path: config_artifact/
