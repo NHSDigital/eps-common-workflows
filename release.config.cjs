@@ -78,10 +78,7 @@ module.exports = {
         ]),
         ...(pypiPublish ? [
             [
-                "semantic-release-pypi",
-                {
-                    repoToken: pypiToken
-                }
+                "semantic-release-pypi"
             ]
         ] : []),
         [

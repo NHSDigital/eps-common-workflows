@@ -64,9 +64,6 @@ on:
             NPM_TOKEN:
                 required: false
                 description: "NPM token to publish packages"
-            PYPI_TOKEN:
-                required: false
-                description: "PyPI token to publish packages"
 jobs:
     install_semantic_release:
         # Install asdf
@@ -329,7 +326,6 @@ jobs:
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
                   PYPI_PUBLISH: ${{ inputs.pypi_publish }}
-                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -341,7 +337,6 @@ jobs:
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
                   PYPI_PUBLISH: ${{ inputs.pypi_publish }}
-                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
