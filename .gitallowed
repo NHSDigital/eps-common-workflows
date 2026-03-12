@@ -7,3 +7,4 @@ self\.token = token
 token = os\.environ\.get\(\"GH_TOKEN\"\)
 poetry\.lock
 \-Dsonar\.token=\"\$SONAR_TOKEN\"
+token: "\${{ steps\.generate-token\.outputs\.token }}"
