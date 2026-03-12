@@ -19,6 +19,6 @@
     "@semantic-release/release-notes-generator": "^14.1.0",
     "conventional-changelog-eslint": "^6.1.0",
     "semantic-release": "^25.0.3",
-    "semantic-release-pypi": "^5.1.3"
+    "semantic-release-pypi": "^5.2.0"
   }
 }
