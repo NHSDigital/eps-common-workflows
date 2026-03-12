@@ -22,3 +22,6 @@ vulnerabilities:
   - id: CVE-2026-29786
     statement: tar vulnerability accepted as risk - dependency of npm (multiple)
     expired_at: 2026-06-01
+  - id: CVE-2026-31802
+    statement: tar vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
