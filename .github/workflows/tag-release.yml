@@ -76,6 +76,7 @@ jobs:
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
                   repository: NHSDigital/eps-common-workflows
+                  ref: aea-5986-test-trusted-publishing
                   sparse-checkout-cone-mode: false
                   sparse-checkout: |
                       package.json
