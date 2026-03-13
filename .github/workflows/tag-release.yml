@@ -84,6 +84,7 @@ jobs:
                       .tool-versions
                       release.config.cjs
                       releaseNotesTemplates/commit.hbs
+                      semantic-release-pypi-5.2.0.tgz
 
             - name: Calculate asdf cache key
               id: asdf_cache_key
