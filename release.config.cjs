@@ -6,7 +6,6 @@ const publish_packages = process.env.PUBLISH_PACKAGES?.split(",").map(s => s.tri
 const mainBranch = process.env.MAIN_BRANCH || "main"
 
 const pypiPublish = process.env.PYPI_PUBLISH?.toLowerCase() === 'true' || false
-const pypiToken = process.env.PYPI_TOKEN
 
 module.exports = {
     branches: [
