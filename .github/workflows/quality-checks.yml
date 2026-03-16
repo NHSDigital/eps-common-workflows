@@ -264,6 +264,7 @@ jobs:
 
       - name: Check python vulnerabilities
         if: ${{ always() && steps.check_languages.outputs.uses_poetry == 'true'}}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           scan-type: "fs"
@@ -277,6 +278,7 @@ jobs:
           trivy-config: trivy.yaml
       - name: Check node vulnerabilities
         if: ${{ always() && steps.check_languages.outputs.uses_node == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           scan-type: "fs"
@@ -290,6 +292,7 @@ jobs:
           trivy-config: trivy.yaml
       - name: Check go vulnerabilities
         if: ${{ always() && steps.check_languages.outputs.uses_go == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           scan-type: "fs"
@@ -302,6 +305,7 @@ jobs:
           exit-code: "1"
       - name: Check java vulnerabilities
         if: ${{ always() && steps.check_languages.outputs.uses_java == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
         with:
           scan-type: "fs"

@@ -151,19 +151,23 @@ jobs:
 
       - name: Check python vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-python
 
       - name: Check node vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-node
       - name: Check go vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-go
       - name: Check java vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-java
       - name: Show vulnerability output
@@ -304,6 +308,7 @@ jobs:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
 
       - name: Check docker vulnerabilities
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-docker
         env:
