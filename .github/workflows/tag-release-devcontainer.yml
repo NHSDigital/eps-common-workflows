@@ -131,6 +131,7 @@ jobs:
                   cp release.config.cjs ../ 
                   mkdir -p ../releaseNotesTemplates 
                   cp releaseNotesTemplates/commit.hbs ../releaseNotesTemplates/
+                  cp -r packages/ ../packages/
                   echo "Current dir is ${PWD}"
             - name: Setup Git branch for semantic-release
               run: |
