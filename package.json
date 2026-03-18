@@ -12,6 +12,10 @@
   },
   "author": "NHS Digital",
   "license": "MIT",
+  "dependencies": {
+    "@aws-sdk/client-cloudformation": "^3.877.0",
+    "@aws-sdk/client-lambda": "^3.877.0"
+  },
   "devDependencies": {
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
