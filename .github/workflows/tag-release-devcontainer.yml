@@ -75,6 +75,7 @@ jobs:
     tag_release:
         permissions:
             id-token: "write"
+            contents: "write"
         runs-on: ubuntu-22.04
         container:
             image: ${{ inputs.pinned_image }}
