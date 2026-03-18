@@ -73,6 +73,8 @@ on:
                 description: "ARN of the role to assume when executing the Jira update lambda"
 jobs:
     tag_release:
+        permissions:
+          id-token: 'write'
         runs-on: ubuntu-22.04
         container:
             image: ${{ inputs.pinned_image }}
