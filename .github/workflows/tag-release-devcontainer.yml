@@ -29,6 +29,16 @@ on:
                 required: false
                 type: string
                 default: "main"
+            update_jira:
+                description: "Whether to update Jira issues during semantic-release"
+                required: false
+                type: boolean
+                default: false
+            jira_release_prefix:
+                description: "Release prefix sent to Jira release tagging"
+                required: false
+                type: string
+                default: ""
             extra_artifact_name:
                 description: "An extra artifact to include in the release"
                 required: false
@@ -58,8 +68,14 @@ on:
             NPM_TOKEN:
                 required: false
                 description: "NPM token to publish packages"
+            EXECUTE_JIRA_LAMBDA_ROLE:
+                required: false
+                description: "ARN of the role to assume when executing the Jira update lambda"
 jobs:
     tag_release:
+        permissions:
+            id-token: "write"
+            contents: "write"
         runs-on: ubuntu-22.04
         container:
             image: ${{ inputs.pinned_image }}
@@ -75,6 +91,16 @@ jobs:
             - name: copy .tool-versions
               run: |
                   cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+            - name: connect to dev account to run release notes lambda
+              uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
+              if: ${{ inputs.update_jira }}
+              with:
+                  aws-region: eu-west-2
+                  role-to-assume: ${{ secrets.EXECUTE_JIRA_LAMBDA_ROLE }}
+                  role-session-name: execute-jira-lambda-session
+                  unset-current-credentials: true
+
             - name: Clone calling repo
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
@@ -92,6 +118,7 @@ jobs:
                       package-lock.json
                       release.config.cjs
                       releaseNotesTemplates/commit.hbs
+                      packages/
             - name: Install semantic release dependencies globally
               run: |
                   cd common_workflow_config
@@ -104,7 +131,9 @@ jobs:
                   cp release.config.cjs ../ 
                   mkdir -p ../releaseNotesTemplates 
                   cp releaseNotesTemplates/commit.hbs ../releaseNotesTemplates/
+                  cp -r packages/semantic_release_jira ../packages/
                   echo "Current dir is ${PWD}"
+                  echo "NODE_PATH=$(npm root --quiet -g)" >> "$GITHUB_ENV"
             - name: Setup Git branch for semantic-release
               run: |
                   # When running from a PR, GitHub checks out a merge commit
@@ -191,6 +220,8 @@ jobs:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  UPDATE_JIRA: ${{ inputs.update_jira }}
+                  JIRA_RELEASE_PREFIX: ${{ inputs.jira_release_prefix }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -201,6 +232,8 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  UPDATE_JIRA: ${{ inputs.update_jira }}
+                  JIRA_RELEASE_PREFIX: ${{ inputs.jira_release_prefix }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
