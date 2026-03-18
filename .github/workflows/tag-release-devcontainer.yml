@@ -91,7 +91,7 @@ jobs:
 
             - name: connect to dev account to run release notes lambda
               uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8
-              if: ${{ inputs.update_jira == 'true' }}
+              if: ${{ inputs.update_jira }}
               with:
                   aws-region: eu-west-2
                   role-to-assume: ${{ secrets.EXECUTE_JIRA_LAMBDA_ROLE }}
