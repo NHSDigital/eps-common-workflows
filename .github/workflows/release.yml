@@ -20,6 +20,9 @@ jobs:
   tag_release:
     needs: [quality_checks, get_config_values]
     uses: ./.github/workflows/tag-release-devcontainer.yml
+    permissions:
+      id-token: write
+      contents: write
     with:
       dry_run: false
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
