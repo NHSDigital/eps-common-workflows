@@ -112,7 +112,6 @@ jobs:
               with:
                   repository: NHSDigital/eps-common-workflows
                   sparse-checkout-cone-mode: false
-                  ref: update_jira
                   path: common_workflow_config
                   sparse-checkout: |
                       package.json
