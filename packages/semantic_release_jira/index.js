@@ -53,7 +53,8 @@ module.exports = {
     async success(pluginConfig, context) {
         const { nextRelease, commits } = context
 
-        const version = nextRelease.version
+        // use gitTag so it includes the prefix and suffix
+        const version = nextRelease.gitTag
 
         // Extract Jira tickets from commit messages
         const jiraTickets = new Set()
