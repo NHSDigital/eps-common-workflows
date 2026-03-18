@@ -45,6 +45,11 @@ on:
                 description: "An repository for the extra artifact"
                 required: false
                 type: string
+            pypi_publish:
+                description: "Whether to publish to PyPI"
+                required: false
+                type: boolean
+                default: false
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -58,6 +63,10 @@ on:
             NPM_TOKEN:
                 required: false
                 description: "NPM token to publish packages"
+            
+            PYPI_TOKEN:
+                required: false
+                description: "PyPI token to publish packages"
 jobs:
     tag_release:
         runs-on: ubuntu-22.04
@@ -191,6 +200,8 @@ jobs:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
+                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -201,6 +212,8 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
+                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
