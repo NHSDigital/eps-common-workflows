@@ -59,7 +59,7 @@ module.exports = {
         // Extract Jira tickets from commit messages
         const jiraTickets = new Set()
 
-        const jiraRegex = /(AEA-\d+)/g
+        const jiraRegex = /\[(AEA-\d+)\]/g
 
         for (const commit of commits) {
             const matches = commit.message.match(jiraRegex)
