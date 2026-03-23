@@ -62,7 +62,8 @@ module.exports = {
         const jiraRegex = /\[(AEA-\d+)\]/g
 
         for (const commit of commits) {
-            const matches = commit.message.match(jiraRegex)
+            const firstLine = commit.message?.split("\n", 1)[0] ?? ""
+            const matches = firstLine.match(jiraRegex)
             if (matches) {
                 matches.forEach(t => jiraTickets.add(t))
             }
