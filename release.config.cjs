@@ -113,7 +113,7 @@ module.exports = {
         ],
         ...(updateJira ? [
             [
-                "./packages/semantic_release_jira",
+                "./packages/semantic_release_jira/index.cjs",
                 {
                     releasePrefix: jiraReleasePrefix
                 }
