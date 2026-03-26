@@ -25,7 +25,8 @@ jobs:
           fetch-depth: 0
       - name: Load config value
         id: load-config
-        run: >
+        run: |
+          set -euo pipefail
           DEVCONTAINER_IMAGE=$(jq -r '.build.args.IMAGE_NAME'
           .devcontainer/devcontainer.json)
 
@@ -40,7 +41,7 @@ jobs:
         id: resolve-version
         env:
           GH_TOKEN: "${{ github.token }}"
-        run: >
+        run: |
           set -euo pipefail
 
 
@@ -92,12 +93,11 @@ jobs:
 
           echo "Resolved latest version: ${RESOLVED_VERSION}"
 
-          echo "LATEST_DEVCONTAINER_VERSION=${RESOLVED_VERSION}" >>
-          "$GITHUB_ENV"
+          echo "LATEST_DEVCONTAINER_VERSION=${RESOLVED_VERSION}" >> "$GITHUB_ENV"
 
           echo "latest_version=${RESOLVED_VERSION}" >> "$GITHUB_OUTPUT"
       - name: Update devcontainer version in config
-        run: >
+        run: |
           set -euo pipefail
 
 
