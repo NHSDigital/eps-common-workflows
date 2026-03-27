@@ -5,6 +5,16 @@ const commitTemplate = readFileSync("./releaseNotesTemplates/commit.hbs").toStri
 const publish_packages = process.env.PUBLISH_PACKAGES?.split(",").map(s => s.trim()).filter(s => s.length > 0) || []
 const mainBranch = process.env.MAIN_BRANCH || "main"
 
+const pypiPublish = process.env.PYPI_PUBLISH?.toLowerCase() === 'true' || false
+const pypiToken = process.env.PYPI_TOKEN
+const updateJira = process.env.UPDATE_JIRA?.toLowerCase() === "true"
+const jiraReleasePrefix = process.env.JIRA_RELEASE_PREFIX
+
+if (updateJira && !jiraReleasePrefix) {
+    // eslint-disable-next-line no-console
+    console.warn("UPDATE_JIRA is true but JIRA_RELEASE_PREFIX is not set; releasePrefix will be undefined.")
+}
+
 module.exports = {
     branches: [
         {
@@ -73,6 +83,14 @@ module.exports = {
                 pkgRoot: subpackage
             }
         ]),
+        ...(pypiPublish ? [
+            [
+                "semantic-release-pypi",
+                {
+                    repoToken: pypiToken
+                }
+            ]
+        ] : []),
         [
             "@semantic-release/github",
             {
@@ -92,6 +110,14 @@ module.exports = {
                 failComment: false,
                 failTitle: false
             }
-        ]
+        ],
+        ...(updateJira ? [
+            [
+                "./packages/semantic_release_jira/index.cjs",
+                {
+                    releasePrefix: jiraReleasePrefix
+                }
+            ]
+        ] : [])
     ]
 }

@@ -12,20 +12,8 @@ updates:
     open-pull-requests-limit: 20
     commit-message:
       prefix: "Upgrade: [dependabot] - "
-
-  ###################################
-  # NPM workspace  ##################
-  ###################################
-  - package-ecosystem: "npm"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "thursday"
-      time: "18:00" # UTC
-    open-pull-requests-limit: 20
-    versioning-strategy: increase
-    commit-message:
-      prefix: "Upgrade: [dependabot] - "
+    cooldown:
+      default-days: 3
 
   ###################################
   # Poetry  #########################
@@ -35,8 +23,26 @@ updates:
     schedule:
       interval: "weekly"
       day: "thursday"
-      time: "18:00" # UTC
+      time: "20:00" # UTC
     open-pull-requests-limit: 20
     versioning-strategy: increase
     commit-message:
       prefix: "Upgrade: [dependabot] - "
+    cooldown:
+      default-days: 3
+
+  ###################################
+  # NPM workspace  ##################
+  ###################################
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "thursday"
+      time: "22:00" # UTC
+    open-pull-requests-limit: 20
+    versioning-strategy: increase
+    commit-message:
+      prefix: "Upgrade: [dependabot] - "
+    cooldown:
+      default-days: 3

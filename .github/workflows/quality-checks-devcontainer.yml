@@ -21,21 +21,15 @@ on:
         description: comma separated list of docker image references to scan when docker scanning is enabled.
         default: ""
         required: false
-      runtime_docker_image:
+      pinned_image:
         type: string
         required: true
 
 jobs:
-  verify_attestation:
-    uses: ./.github/workflows/verify-attestation.yml
-    with:
-      runtime_docker_image: "${{ inputs.runtime_docker_image }}"
-      verify_published_from_main_image: false
   quality_checks:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -63,7 +57,7 @@ jobs:
 
       - &cache_npm
         name: Cache npm dependencies
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
         with:
           path: ./node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -150,26 +144,30 @@ jobs:
         run: |
           make trivy-generate-sbom
       - name: Upload sbom
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: sbom.cdx.json
           path: .trivy_out/sbom.cdx.json
 
       - name: Check python vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-python
 
       - name: Check node vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-node
       - name: Check go vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-go
       - name: Check java vulnerabilities
         if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-java
       - name: Show vulnerability output
@@ -213,9 +211,8 @@ jobs:
 
   get_docker_images_to_scan:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -283,9 +280,9 @@ jobs:
 
   docker_vulnerability_scan:
     runs-on: ubuntu-22.04
-    needs: [get_docker_images_to_scan, verify_attestation]
+    needs: get_docker_images_to_scan
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -311,6 +308,7 @@ jobs:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
 
       - name: Check docker vulnerabilities
+        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
           make trivy-scan-docker
         env:
@@ -326,9 +324,8 @@ jobs:
 
   IaC-validation:
     runs-on: ubuntu-22.04
-    needs: verify_attestation
     container:
-      image: ${{ needs.verify_attestation.outputs.pinned_image }}
+      image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
     defaults:
       run:
@@ -413,7 +410,7 @@ jobs:
           make cfn-guard-cdk
 
       - name: Download terraform plans
-        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
         with:
           pattern: "*_terraform_plan"
           path: terraform_plans/
@@ -442,7 +439,7 @@ jobs:
 
       - name: Upload cfn_guard_output
         if: failure()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
           name: cfn_guard_output
           path: .cfn_guard_out

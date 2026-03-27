@@ -11,7 +11,7 @@ on:
                 description: "The branch name to base the release on"
                 required: true
                 type: string
-            runtime_docker_image:
+            pinned_image:
                 type: string
                 required: true
             publish_packages:
@@ -29,6 +29,16 @@ on:
                 required: false
                 type: string
                 default: "main"
+            update_jira:
+                description: "Whether to update Jira issues during semantic-release"
+                required: false
+                type: boolean
+                default: false
+            jira_release_prefix:
+                description: "Release prefix sent to Jira release tagging"
+                required: false
+                type: string
+                default: ""
             extra_artifact_name:
                 description: "An extra artifact to include in the release"
                 required: false
@@ -45,9 +55,11 @@ on:
                 description: "An repository for the extra artifact"
                 required: false
                 type: string
-            verify_published_from_main_image:
-                required: true
+            pypi_publish:
+                description: "Whether to publish to PyPI"
+                required: false
                 type: boolean
+                default: false
         outputs:
             version_tag:
                 value: ${{ jobs.tag_release.outputs.version_tag }}
@@ -61,17 +73,20 @@ on:
             NPM_TOKEN:
                 required: false
                 description: "NPM token to publish packages"
+            EXECUTE_JIRA_LAMBDA_ROLE:
+                required: false
+                description: "ARN of the role to assume when executing the Jira update lambda"
+            PYPI_TOKEN:
+                required: false
+                description: "PyPI token to publish packages"
 jobs:
-    verify_attestation:
-        uses: ./.github/workflows/verify-attestation.yml
-        with:
-            runtime_docker_image: "${{ inputs.runtime_docker_image }}"
-            verify_published_from_main_image: ${{ inputs.verify_published_from_main_image }}
     tag_release:
+        permissions:
+            id-token: "write"
+            contents: "write"
         runs-on: ubuntu-22.04
-        needs: verify_attestation
         container:
-            image: ${{ needs.verify_attestation.outputs.pinned_image }}
+            image: ${{ inputs.pinned_image }}
             options: --user 1001:1001 --group-add 128
         defaults:
             run:
@@ -84,6 +99,16 @@ jobs:
             - name: copy .tool-versions
               run: |
                   cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+            - name: connect to dev account to run release notes lambda
+              uses: aws-actions/configure-aws-credentials@8df5847569e6427dd6c4fb1cf565c83acfa8afa7
+              if: ${{ inputs.update_jira }}
+              with:
+                  aws-region: eu-west-2
+                  role-to-assume: ${{ secrets.EXECUTE_JIRA_LAMBDA_ROLE }}
+                  role-session-name: execute-jira-lambda-session
+                  unset-current-credentials: true
+
             - name: Clone calling repo
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
@@ -101,6 +126,7 @@ jobs:
                       package-lock.json
                       release.config.cjs
                       releaseNotesTemplates/commit.hbs
+                      packages/
             - name: Install semantic release dependencies globally
               run: |
                   cd common_workflow_config
@@ -113,7 +139,9 @@ jobs:
                   cp release.config.cjs ../ 
                   mkdir -p ../releaseNotesTemplates 
                   cp releaseNotesTemplates/commit.hbs ../releaseNotesTemplates/
+                  cp -r packages/semantic_release_jira ../packages/
                   echo "Current dir is ${PWD}"
+                  echo "NODE_PATH=$(npm root --quiet -g)" >> "$GITHUB_ENV"
             - name: Setup Git branch for semantic-release
               run: |
                   # When running from a PR, GitHub checks out a merge commit
@@ -131,7 +159,7 @@ jobs:
 
             - name: Download extra artifact
               if: ${{ inputs.extra_artifact_name != '' }}
-              uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131
+              uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
               with:
                   artifact-ids: ${{ inputs.extra_artifact_id }}
                   github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -200,6 +228,10 @@ jobs:
                   NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  UPDATE_JIRA: ${{ inputs.update_jira }}
+                  JIRA_RELEASE_PREFIX: ${{ inputs.jira_release_prefix }}
+                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
+                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
             - name: Create semantic release tag
               if: ${{ !inputs.dry_run }}
@@ -210,6 +242,10 @@ jobs:
                   TAG_FORMAT: ${{ inputs.tag_format }}
                   MAIN_BRANCH: ${{ inputs.main_branch }}
                   EXTRA_ASSET: ${{ inputs.extra_artifact_name }}
+                  UPDATE_JIRA: ${{ inputs.update_jira }}
+                  JIRA_RELEASE_PREFIX: ${{ inputs.jira_release_prefix }}
+                  PYPI_PUBLISH: ${{ inputs.pypi_publish }}
+                  PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 

@@ -4,18 +4,33 @@ vulnerabilities:
       - "package-lock.json"
     statement: downstream dependency for tar - waiting for new npm release
     expired_at: 2026-06-01
-  - id: CVE-2026-25128
-    statement: fast-xml-parser vulnerability accepted as risk - dependency of aws-sdk/client-dynamodb
-    expired_at: 2026-03-01
-  - id: CVE-2026-25547
-    statement: isaacs/brace-expansion vulnerability accepted as risk - dependency of semantic-release
-    expired_at: 2026-03-01
-  - id: CVE-2026-0775
-    statement: npm vulnerability accepted as risk - dependency of semantic-release
-    expired_at: 2026-03-01
   - id: CVE-2026-26996
     statement: minimatch vulnerability accepted as risk
     expired_at: 2026-06-01
+  - id: CVE-2026-27903
+    statement: minimatch vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
+  - id: CVE-2026-27904
+    statement: minimatch vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
   - id: CVE-2026-26960
     statement: tar vulnerability accepted as risk
+    expired_at: 2026-06-01
+  - id: GHSA-qffp-2rhf-9h96
+    statement: tar vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
+  - id: CVE-2026-29786
+    statement: tar vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
+  - id: CVE-2026-31802
+    statement: tar vulnerability accepted as risk - dependency of npm (multiple)
+    expired_at: 2026-06-01
+  - id: CVE-2026-1526
+    statement: undici vulnerability accepted as risk
+    expired_at: 2026-06-01
+  - id: CVE-2026-2229
+    statement: undici vulnerability accepted as risk
+    expired_at: 2026-06-01
+  - id: CVE-2026-33036
+    statement: fast-xml-parser vulnerability accepted as risk
     expired_at: 2026-06-01

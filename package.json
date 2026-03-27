@@ -13,11 +13,14 @@
   "author": "NHS Digital",
   "license": "MIT",
   "devDependencies": {
+    "@aws-sdk/client-cloudformation": "^3.1018.0",
+    "@aws-sdk/client-lambda": "^3.1018.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/commit-analyzer": "^13.0.1",
     "@semantic-release/github": "^12.0.6",
     "@semantic-release/release-notes-generator": "^14.1.0",
-    "conventional-changelog-eslint": "^6.0.0",
-    "semantic-release": "^25.0.3"
+    "conventional-changelog-eslint": "^6.1.0",
+    "semantic-release": "^25.0.3",
+    "semantic-release-pypi": "^5.2.0"
   }
 }
