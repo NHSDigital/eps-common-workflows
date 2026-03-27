@@ -115,6 +115,12 @@ This workflow syncs Copilot instructions from this repo into another repo and op
 #### Inputs
 
 - `ref`: Branch in this repo to sync from. Default: `main`
+- `base_branch`: Target branch for the pull request. Default: `main`.
+
+#### Secret Inputs
+
+- `CREATE_PULL_REQUEST_APP_ID`: GitHub App ID used to generate an installation token.
+- `CREATE_PULL_REQUEST_PEM`: GitHub App private key used to generate an installation token.
 
 #### Example
 
@@ -134,6 +140,9 @@ jobs:
     uses: NHSDigital/eps-common-workflows/.github/workflows/sync_copilot.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
     with:
       ref: ${{ github.event.inputs.ref }}
+    secrets:
+      CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
+      CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}
 ```
 ```
 ## PR Title Check
