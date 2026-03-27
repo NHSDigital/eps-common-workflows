@@ -27,11 +27,9 @@ jobs:
         id: load-config
         run: |
           set -euo pipefail
-          DEVCONTAINER_IMAGE=$(jq -r '.build.args.IMAGE_NAME'
-          .devcontainer/devcontainer.json)
+          DEVCONTAINER_IMAGE=$(jq -r '.build.args.IMAGE_NAME' .devcontainer/devcontainer.json)
 
-          DEVCONTAINER_VERSION=$(jq -r '.build.args.IMAGE_VERSION'
-          .devcontainer/devcontainer.json)
+          DEVCONTAINER_VERSION=$(jq -r '.build.args.IMAGE_VERSION' .devcontainer/devcontainer.json)
 
           {
             echo "DEVCONTAINER_IMAGE=$DEVCONTAINER_IMAGE"
