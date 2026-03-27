@@ -1,0 +1,69 @@
+name: Sync copilot instructions
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: "The branch to sync from the central repository"
+        required: false
+        default: "main"
+        type: string
+      base_branch:
+        description: "The base branch for the pull request"
+        required: false
+        type: string
+        default: main
+    secrets:
+      CREATE_PULL_REQUEST_APP_ID:
+        required: true
+      CREATE_PULL_REQUEST_PEM:
+        required: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Fetch central instructions
+        run: |
+          rm -rf .github/copilot
+          git clone \
+            --depth 1 \
+            --branch "${BRANCH_NAME}" \
+            https://github.com/NHSDigital/eps-common-workflows.git tmp
+          mv tmp/.github/chatmodes .github/chatmodes
+          mv tmp/.github/instructions .github/instructions
+          mv tmp/.github/copilot-instructions.md .github/copilot-instructions.md
+          rm -rf tmp
+        env:
+          BRANCH_NAME: ${{ inputs.ref }}
+      - name: Create GitHub App Token
+        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
+        id: generate-token
+        with:
+          app-id: "${{ secrets.CREATE_PULL_REQUEST_APP_ID }}"
+          private-key: "${{ secrets.CREATE_PULL_REQUEST_PEM }}"
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
+        with:
+          token: "${{ steps.generate-token.outputs.token }}"
+          commit-message: "Upgrade: [dependabot] - sync Copilot instructions"
+          title: "Upgrade: [dependabot] - sync Copilot instructions"
+          body: |
+            Syncing Copilot instructions from central repo.
+            Ref: `${{ inputs.ref }}`
+          branch: copilot-instructions-sync
+          base: ${{ inputs.base_branch }}
+          branch-suffix: random
+          sign-commits: true
+          delete-branch: true

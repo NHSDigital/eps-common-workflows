@@ -108,6 +108,42 @@ jobs:
     secrets:
       AUTOMERGE_APP_ID: ${{ secrets.AUTOMERGE_APP_ID }}
       AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
+
+## sync copilot instructions
+This workflow syncs Copilot instructions from this repo into another repo and opens a PR with the changes.
+
+#### Inputs
+
+- `ref`: Branch in this repo to sync from. Default: `main`
+- `base_branch`: Target branch for the pull request. Default: `main`.
+
+#### Secret Inputs
+
+- `CREATE_PULL_REQUEST_APP_ID`: GitHub App ID used to generate an installation token.
+- `CREATE_PULL_REQUEST_PEM`: GitHub App private key used to generate an installation token.
+
+#### Example
+
+```yaml
+name: Sync Copilot Instructions
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Branch to sync from"
+        required: false
+        type: string
+
+jobs:
+  sync-copilot:
+    uses: NHSDigital/eps-common-workflows/.github/workflows/sync_copilot.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
+    with:
+      ref: ${{ github.event.inputs.ref }}
+    secrets:
+      CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
+      CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}
+```
 ```
 ## PR Title Check
 This workflow checks that all pull requests have a title that matches the required format, and comments on the PR with a link to the relevant ticket if a ticket reference is found.
