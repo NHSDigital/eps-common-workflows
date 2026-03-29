@@ -8,6 +8,7 @@ The workflows that are available to use are
 
 - [Combine Dependabot PRs](#combine-dependabot-prs)
 - [Dependabot Auto Approve and Merge](#dependabot-auto-approve-and-merge)
+- [Sync copilot instructios](#sync-copilot-instructions)
 - [PR Title Check](#pr-title-check)
 - [Get Repo Config](#get-repo-config)
 - [Quality Checks](#quality-checks)
@@ -114,8 +115,8 @@ This workflow syncs Copilot instructions from this repo into another repo and op
 
 #### Inputs
 
-- `ref`: Branch in this repo to sync from. Default: `main`
-- `base_branch`: Target branch for the pull request. Default: `main`.
+- `common_workflows_ref`: Branch in common workflows repo to sync from. Default: `main`
+- `base_branch`: The base branch in the calling repository. Default: `main`.
 
 #### Secret Inputs
 
@@ -130,20 +131,20 @@ name: Sync Copilot Instructions
 on:
   workflow_dispatch:
     inputs:
-      ref:
+      common_workflows_ref:
         description: "Branch to sync from"
         required: false
         type: string
+        default: main
 
 jobs:
   sync-copilot:
     uses: NHSDigital/eps-common-workflows/.github/workflows/sync_copilot.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
     with:
-      ref: ${{ github.event.inputs.ref }}
+      ref: ${{ github.event.inputs.common_workflows_ref }}
     secrets:
       CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
       CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}
-```
 ```
 ## PR Title Check
 This workflow checks that all pull requests have a title that matches the required format, and comments on the PR with a link to the relevant ticket if a ticket reference is found.
