@@ -17,6 +17,12 @@ rules:
       - quality-checks-devcontainer.yml:190:29
       - dependabot-auto-approve-and-merge.yml:24:31
       - dependabot-auto-approve-and-merge.yml:25:36
+      - tag-release-devcontainer.yml:229:34
+      - tag-release-devcontainer.yml:235:35
+      - tag-release-devcontainer.yml:241:34
+      - tag-release-devcontainer.yml:249:35
+      - update-dev-container-version.yml:136:24
+      - update-dev-container-version.yml:137:29
   unpinned-images:
     ignore:
       - quality-checks-devcontainer.yml:32:7
@@ -24,3 +30,4 @@ rules:
       - quality-checks-devcontainer.yml:285:7
       - quality-checks-devcontainer.yml:328:7
       - tag-release-devcontainer.yml:89:13
+      - quality-checks-devcontainer.yml:330:7

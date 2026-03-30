@@ -23,6 +23,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           fetch-depth: 0
+          persist-credentials: false
       - name: Load config value
         id: load-config
         run: |
@@ -98,9 +99,6 @@ jobs:
         run: |
           set -euo pipefail
 
-
-          TARGET_VERSION='${{ steps.resolve-version.outputs.latest_version }}'
-
           if [[ "$TARGET_VERSION" == "$DEVCONTAINER_VERSION" ]]; then
             echo "IMAGE_VERSION is already up to date (${DEVCONTAINER_VERSION})"
             exit 0
@@ -118,16 +116,16 @@ jobs:
 
           config = json.loads(config_file.read_text())
 
-          config['build']['args']['IMAGE_VERSION'] = '${{
-          steps.resolve-version.outputs.latest_version }}'
+          config['build']['args']['IMAGE_VERSION'] = '${TARGET_VERSION}'
 
           config_file.write_text(json.dumps(config, indent=2) + '\n')
 
           PY
 
 
-          echo "Updated IMAGE_VERSION from ${DEVCONTAINER_VERSION} to
-          ${LATEST_DEVCONTAINER_VERSION}"
+          echo "Updated IMAGE_VERSION from ${DEVCONTAINER_VERSION} to ${TARGET_VERSION}"
+        env:
+          TARGET_VERSION: "${{ steps.resolve-version.outputs.latest_version }}"
       - name: Create GitHub App Token
         uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
         id: generate-token

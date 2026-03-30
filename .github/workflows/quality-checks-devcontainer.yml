@@ -317,10 +317,12 @@ jobs:
       - name: Show docker vulnerability output
         if: always()
         run: |
-          echo "Scan output for ${{ matrix.docker_image }}"
+          echo "Scan output for ${DOCKER_IMAGE}"
           if [ -f .trivy_out/dependency_results_docker.txt ]; then
             cat .trivy_out/dependency_results_docker.txt
           fi
+        env:
+          DOCKER_IMAGE: ${{ matrix.docker_image }}
 
   IaC-validation:
     runs-on: ubuntu-22.04

@@ -114,6 +114,7 @@ jobs:
               with:
                   repository: ${{ github.repository }}
                   ref: ${{ github.sha }}
+                  persist-credentials: true # needed for semantic-release to push tags and commits
 
             - name: Checkout semantic-release workflow
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -279,6 +280,7 @@ jobs:
                   repository: ${{ github.repository }}
                   ref: gh-pages
                   path: gh-pages
+                  persist-credentials: true # needed for push to gh-pages
 
             - name: Publish release notes to gh-pages
               if: ${{ !inputs.dry_run }}
@@ -319,5 +321,7 @@ jobs:
               shell: bash
               run: |
                   TIMESTAMP=$(date +%s)
-                  VERSION=$(echo ${{ steps.output_version_tag.outputs.VERSION_TAG }} | tr . -)
+                  VERSION=$(echo "${VERSION_TAG}" | tr . -)
                   echo CHANGE_SET_VERSION="$VERSION-$TIMESTAMP" >> "$GITHUB_OUTPUT"
+              env:
+                  VERSION_TAG: ${{ steps.output_version_tag.outputs.VERSION_TAG }}
