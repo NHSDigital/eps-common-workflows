@@ -41,7 +41,8 @@ jobs:
           path: eps-common-workflows
           repository: NHSDigital/eps-common-workflows
           sparse-checkout: |
-            - .github/instructions
+            - .github/instructions/general
+            - .github/instructions/languages
             - .github/copilot-instructions.md
             - .github/prompts
 

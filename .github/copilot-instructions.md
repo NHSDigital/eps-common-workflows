@@ -1,3 +1,7 @@
+## Project-Specific instructions
+Check the following files for any project-specific coding standards or guidelines:
+- .github/instructions/project/instructions.md
+
 # Base Coding Standards
 - Follow clean code principles
 - Write comprehensive tests
