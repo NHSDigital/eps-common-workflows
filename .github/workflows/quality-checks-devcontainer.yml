@@ -46,6 +46,7 @@ jobs:
         with:
           ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
+          persist-credentials: false
 
       - &setup_npmrc
         name: Setting up .npmrc

@@ -4,7 +4,7 @@ rules:
       days: 3
   secrets-outside-env:
     ignore:
-      # this workflow uses secrets outside of an environment
+      # these workflows use secrets outside of an environment because it is passed into the workflow
       - tag-release-devcontainer.yml:108:39
       - tag-release-devcontainer.yml:228:34
       - tag-release-devcontainer.yml:234:35
@@ -12,22 +12,36 @@ rules:
       - tag-release-devcontainer.yml:248:35
       - update-dev-container-version.yml:135:24
       - update-dev-container-version.yml:136:29
-      - quality-checks-devcontainer.yml:210:28
-      - quality-checks-devcontainer.yml:203:28
-      - quality-checks-devcontainer.yml:190:29
+      - quality-checks-devcontainer.yml:211:28
+      - quality-checks-devcontainer.yml:204:28
+      - quality-checks-devcontainer.yml:191:29
       - dependabot-auto-approve-and-merge.yml:24:31
       - dependabot-auto-approve-and-merge.yml:25:36
-      - tag-release-devcontainer.yml:229:34
-      - tag-release-devcontainer.yml:235:35
-      - tag-release-devcontainer.yml:241:34
-      - tag-release-devcontainer.yml:249:35
+      - tag-release-devcontainer.yml:230:34
+      - tag-release-devcontainer.yml:236:35
+      - tag-release-devcontainer.yml:242:34
+      - tag-release-devcontainer.yml:250:35
       - update-dev-container-version.yml:136:24
       - update-dev-container-version.yml:137:29
+      - update-dev-container-version.yml:133:24
+      - update-dev-container-version.yml:134:29
   unpinned-images:
+    # these workflows use unpinned images because they are using a full image passed in that contains the tag
     ignore:
       - quality-checks-devcontainer.yml:32:7
-      - quality-checks-devcontainer.yml:215:7
-      - quality-checks-devcontainer.yml:285:7
-      - quality-checks-devcontainer.yml:328:7
+      - quality-checks-devcontainer.yml:216:7
+      - quality-checks-devcontainer.yml:286:7
+      - quality-checks-devcontainer.yml:329:7
       - tag-release-devcontainer.yml:89:13
-      - quality-checks-devcontainer.yml:330:7
+      - quality-checks-devcontainer.yml:331:7
+  excessive-permissions:
+    # these are possible excessive permissions but need time to work out if they are actually excessive or not
+    ignore:
+      - pull_request.yml:1:1
+      - pull_request.yml:11:3
+      - pull_request.yml:18:3
+      - pull_request.yml:21:3
+      - pull_request.yml:26:3
+      - release.yml:1:1
+      - release.yml:11:3
+      - release.yml:13:3

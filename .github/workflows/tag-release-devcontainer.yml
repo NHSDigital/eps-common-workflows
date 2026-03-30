@@ -128,6 +128,7 @@ jobs:
                       release.config.cjs
                       releaseNotesTemplates/commit.hbs
                       packages/
+                  persist-credentials: false
             - name: Install semantic release dependencies globally
               run: |
                   cd common_workflow_config
