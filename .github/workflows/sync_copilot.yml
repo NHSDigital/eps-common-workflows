@@ -27,13 +27,13 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout code
+      - name: Checkout calling repo code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.calling_repo_base_branch }}
           fetch-depth: 0
 
-      - name: Checkout code
+      - name: Checkout central repo code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           ref: ${{ inputs.common_workflows_ref }}
