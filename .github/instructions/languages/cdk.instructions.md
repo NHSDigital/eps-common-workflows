@@ -90,7 +90,7 @@ export class CptsApiAppStack extends Stack {
 ## Validation and Verification
 
 - Build: `make cdk-synth`
-- Lint: `npm run lint --workspace packges/cdk`
+- Lint: `npm run lint --workspace packages/cdk`
 
 ## Maintenance
 

@@ -89,4 +89,3 @@ These instructions are designed to guide GitHub Copilot in generating effective,
 - Avoid global variables; use function arguments or class attributes.
 
 ---
-

@@ -1,6 +1,5 @@
-# Copilot instructions for CloudFormation YAML in this repo
 ---
-description: 'Brief description of the instruction purpose and scope'
+description: 'Guidelines for writing, reviewing, and maintaining cloudformation templates'
 applyTo: 'cloudformation/**'
 ---
 

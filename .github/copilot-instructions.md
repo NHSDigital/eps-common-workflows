@@ -5,16 +5,14 @@
 
 ## Language-Specific Instructions
 Always follow security best practices as outlined in:
-- .github/instructions/general/SECURITY.md
+- .github/instructions/general/security.instructions.md
 Follow additional language-specific guidelines in:
-- .github/instructions/language-specific/INSTRUCTIONS-CDK.md
-- .github/instructions/language-specific/INSTRUCTIONS-CLOUDFORMATION.md
-- .github/instructions/language-specific/INSTRUCTIONS-JAVA.md
-- .github/instructions/language-specific/INSTRUCTIONS-KOTLIN.md
-- .github/instructions/language-specific/INSTRUCTIONS-PYTHON.md
-- .github/instructions/language-specific/INSTRUCTIONS-TERRAFORM.md
-- .github/instructions/language-specific/INSTRUCTIONS-SAM.md
-- .github/instructions/language-specific/INSTRUCTIONS-TYPESCRIPT.md
+- .github/instructions/language-specific/cdk.instructions.md
+- .github/instructions/language-specific/cloudformation.instructions.md
+- .github/instructions/language-specific/python.instructions.md
+- .github/instructions/language-specific/terraform.instructions.md
+- .github/instructions/language-specific/sam.instructions.md
+- .github/instructions/language-specific/typescript.instructions.md
 
 ## Project-Specific Rules
 - Use our custom logging service

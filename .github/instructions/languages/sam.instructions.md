@@ -1,6 +1,5 @@
-# SAM Template Instructions for GitHub Copilot
 ---
-description: 'Brief description of the instruction purpose and scope'
+description: 'Guidelines for writing, reviewing, and maintaining SAM templates'
 applyTo: 'SAMtemplates/**'
 ---
 ## Scope
@@ -142,7 +141,7 @@ MutualTlsAuthentication:
 - Use managed policies from separate resource templates
 - Import cross-stack values: `!ImportValue account-resources:SpinePrivateKey`
 - Follow principle of least privilege
-- Include guard rules suppression only where necessary. By default these should not be added. If they are added an exlanation should be included to say why we are overriding them
+- Include guard rules suppression only where necessary. By default these should not be added. If they are added an explanation should be included to say why we are overriding them
 
 ### Environment Variables and Secrets
 ```yaml
