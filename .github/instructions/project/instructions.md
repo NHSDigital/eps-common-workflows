@@ -1,12 +1,12 @@
-# EPS Common Workflow - copilot instructions
+# EPS Common Workflow - Copilot instructions
 
 ## Overview
-This contains common github workflows that are used by other EPS projects
+This contains common GitHub workflows that are used by other EPS projects
 
 ## General
 These rules should be followed for all workflows
 
-*NEVER* use a version number in 3rd party actions or workflows - always use the git commit sha instead
+*NEVER* use a version number in 3rd party actions or workflows - always use the Git commit SHA instead
 *NEVER* use secrets: inherit in a workflow - always define what secrets are being passed through to another workflow
 *NEVER* use an input to a workflow directly in a code execution block. Always define an environment variable and use that in the code execution block
 

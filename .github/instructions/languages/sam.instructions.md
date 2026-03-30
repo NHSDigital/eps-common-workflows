@@ -27,7 +27,7 @@ This is a healthcare API service deployed using AWS SAM (Serverless Application 
 ### Standard Parameters
 Always include these common parameters in templates:
 ```yaml
-Parameters
+Parameters:
   StackName:
     Type: String
     Default: none
@@ -187,8 +187,8 @@ Environment:
 5. **Resource Naming**: Consistent naming with stack prefix
 6. **Documentation**: Include meaningful descriptions for all resources
 7. **Guard Rules**: Suppress only when necessary and document reasons
-9. **Build Methods**: Use esbuild for Node.js Lambda functions
-10. **Version Pinning**: Pin Lambda layer versions and runtimes
+8. **Build Methods**: Use esbuild for Node.js Lambda functions
+9. **Version Pinning**: Pin Lambda layer versions and runtimes
 
 ### Common Import Values
 - `eps-route53-resources:EPS-domain`

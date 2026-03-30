@@ -1,6 +1,6 @@
 ---
 description: 'Guidelines for writing high-quality, maintainable TypeScript code with best practices for logging, error handling, code organization, naming, formatting, and style.'
-applyTo: '**/*.ts, **/*.tsx'
+applyTo: '**/*.{ts,tsx}'
 ---
 
 # TypeScript Development Guidelines
