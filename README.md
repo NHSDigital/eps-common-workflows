@@ -111,17 +111,15 @@ jobs:
       AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
 ```
 ## Sync copilot instructions
-This workflow syncs Copilot instructions from this repo into another repo and opens a PR with the changes.
+This workflow syncs Copilot instructions from this repo into another repo and opens a PR with the changes.   
+It uses the environment secrets CREATE_PULL_REQUEST_APP_ID and CREATE_PULL_REQUEST_PEM that are defined in the create_pull_request environment in each repo
 
 #### Inputs
 
 - `common_workflows_ref`: Branch in common workflows repo to sync from. Default: `main`
 - `calling_repo_base_branch`: The base branch in the calling repository. Default: `main`.
 
-#### Secret Inputs
 
-- `CREATE_PULL_REQUEST_APP_ID`: GitHub App ID used to generate an installation token.
-- `CREATE_PULL_REQUEST_PEM`: GitHub App private key used to generate an installation token.
 
 #### Example
 
