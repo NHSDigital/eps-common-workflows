@@ -43,8 +43,9 @@ This document provides instructions for generating, reviewing, and maintaining T
 - Use 2 spaces for indentation.
 - Limit lines to 120 characters.
 - Use single quotes for strings.
-- Always use semicolons.
-- Prefer trailing commas in multiline objects and arrays.
+- Never use semicolons for line termination.
+- Avoid trailing commas in multiline objects and arrays.
+- Avoid spaces at start and end of single line braces.
 - Use ESLint and Prettier for consistent formatting.
 
 ## Architecture/Structure
@@ -64,10 +65,10 @@ This document provides instructions for generating, reviewing, and maintaining T
 - Example:
 
     ```typescript
-    import { logger } from './utils/logger';
+    import {logger} from './utils/logger';
 
-    logger.info('Fetching user data', { userId });
-    logger.error('Failed to fetch user', { error });
+    logger.info('Fetching user data', {userId});
+    logger.error('Failed to fetch user', {error});
     ```
 
 ### Error Handling
@@ -81,14 +82,14 @@ This document provides instructions for generating, reviewing, and maintaining T
     try {
       const result = await fetchData();
     } catch (error) {
-      logger.error('Data fetch failed', { error });
+      logger.error('Data fetch failed', {error});
       throw new DataFetchError('Unable to fetch data');
     }
     ```
 
 ### Type Safety
 
-- Prefer interfaces and types over `any`.
+- Prefer interfaces and types. You MUST NOT use `any`.
 - Use type guards and assertions when necessary.
 - Example:
 
@@ -98,7 +99,7 @@ This document provides instructions for generating, reviewing, and maintaining T
       name: string;
     }
 
-    function isUser(obj: any): obj is User {
+    function isUser(obj: object): obj is User {
       return typeof obj.id === 'string' && typeof obj.name === 'string';
     }
     ```
@@ -119,7 +120,7 @@ This document provides instructions for generating, reviewing, and maintaining T
 ## Testing
 
 - Write unit tests for all business logic.
-- Use Jest or similar frameworks for testing.
+- Use the existing framework for testing and vitest for new packages.
 - Mock external dependencies in tests.
 - Example test file structure:
 
@@ -129,6 +130,20 @@ This document provides instructions for generating, reviewing, and maintaining T
     tests/
       handler.test.ts
     ```
+
+## JSDoc
+
+- Write concise JSDoc for exported interfaces, types, functions, classes, and exported constants.
+- Prefer short phrase-style summaries; avoid long narrative prose.
+- Avoid stating information that is obvious from function signatures.
+- Consider @param and @returns for every exported function, then include them only when they add meaning not obvious from the signature.
+- Skip @param when it only repeats parameter name/type; keep it when documenting constraints, defaults, units, side effects, or domain context.
+- It is acceptable to use only @returns in a JSDoc block when that tag carries all useful context.
+- Omit a free-text summary line when it only restates the @returns content.
+- Provide @example on constructors of exported types/classes and on non-trivial exported types.
+- Use @default only when the property is optional in the type and is defaulted in implementation.
+- Keep JSDoc defaults aligned with both type signatures and runtime behaviour.
+- For construct props interfaces, include a top-level summary and property docs only when intent is non-obvious.
 
 ## Examples and Code Snippets
 
