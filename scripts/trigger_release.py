@@ -32,8 +32,7 @@ class GitHubWorkflowMonitor:
         self.version_tag: Optional[str] = None
         self.jobs_requiring_approval = [
             "release_ref",
-            "release_qa",
-            "release_int"
+            "release_qa"
         ]
         self.approved_jobs = set()
         self.completed_jobs = set()
@@ -207,28 +206,28 @@ class GitHubWorkflowMonitor:
                     env_name = deployment["environment"]["name"]
                     env_id = deployment["environment"]["id"]
 
-                    # Check if this is release_prod
-                    if env_name == "prod":
+                    # Check if this is release_int
+                    if env_name == "int":
                         self.logger.info(
-                            f"\n🛑 Reached production deployment for "
+                            f"\n🛑 Reached INT deployment for "
                             f"environment '{env_name}'"
                         )
                         self.print_summary(
-                            "Stopped at production deployment"
+                            "Stopped at INT deployment"
                         )
                         return True
 
                     # Auto-approve other environments
                     job_name = f"release_{env_name}"
-                    if (job_name in self.jobs_requiring_approval and
-                            job_name not in self.approved_jobs):
+                    if (job_name in self.jobs_requiring_approval):
                         self.logger.info(
                             f"✓ Approving deployment to environment "
                             f"'{env_name}'..."
                         )
                         if self.approve_deployment(self.run_id, [env_id]):
-                            self.approved_jobs.add(job_name)
                             self.logger.info(f"✅ Approved: {job_name}")
+                            if job_name not in self.approved_jobs:
+                                self.approved_jobs.add(job_name)
                         else:
                             self.logger.warning(f"⚠️  Failed to approve: {job_name}")
 
