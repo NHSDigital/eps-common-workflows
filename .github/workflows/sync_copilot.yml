@@ -7,7 +7,7 @@ on:
 
 jobs:
   sync-copilot-instructions:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     environment: create_pull_request
     permissions:
       contents: write
@@ -15,7 +15,7 @@ jobs:
 
     steps:
       - name: Sync shared instructions
-        uses: NHSDigital/eps-copilot-instructions@initial_instructions
+        uses: NHSDigital/eps-copilot-instructions@08241b83de78b996e7796806be8435314e9f0b7a
         with:
           common_workflows_ref: main
           calling_repo_base_branch: main
