@@ -8,3 +8,4 @@ release_notes
 .venv
 .asdf
 .trivy_out
+.sbom
