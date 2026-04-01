@@ -5,35 +5,15 @@ rules:
   secrets-outside-env:
     ignore:
       # these workflows use secrets outside of an environment because it is passed into the workflow
-      - tag-release-devcontainer.yml:108:39
-      - tag-release-devcontainer.yml:228:34
-      - tag-release-devcontainer.yml:234:35
-      - tag-release-devcontainer.yml:240:34
-      - tag-release-devcontainer.yml:248:35
-      - update-dev-container-version.yml:135:24
-      - update-dev-container-version.yml:136:29
-      - quality-checks-devcontainer.yml:211:28
-      - quality-checks-devcontainer.yml:204:28
-      - quality-checks-devcontainer.yml:191:29
-      - dependabot-auto-approve-and-merge.yml:24:31
-      - dependabot-auto-approve-and-merge.yml:25:36
-      - tag-release-devcontainer.yml:230:34
-      - tag-release-devcontainer.yml:236:35
-      - tag-release-devcontainer.yml:242:34
-      - tag-release-devcontainer.yml:250:35
-      - update-dev-container-version.yml:136:24
-      - update-dev-container-version.yml:137:29
-      - update-dev-container-version.yml:133:24
-      - update-dev-container-version.yml:134:29
+      - tag-release-devcontainer.yml
+      - update-dev-container-version.yml
+      - quality-checks-devcontainer.yml
+      - dependabot-auto-approve-and-merge.yml
   unpinned-images:
     # these workflows use unpinned images because they are using a full image passed in that contains the tag
     ignore:
-      - quality-checks-devcontainer.yml:32:7
-      - quality-checks-devcontainer.yml:216:7
-      - quality-checks-devcontainer.yml:286:7
-      - quality-checks-devcontainer.yml:329:7
-      - tag-release-devcontainer.yml:89:13
-      - quality-checks-devcontainer.yml:331:7
+      - quality-checks-devcontainer.yml
+      - tag-release-devcontainer.yml
   excessive-permissions:
     # these are possible excessive permissions but need time to work out if they are actually excessive or not
     ignore:
