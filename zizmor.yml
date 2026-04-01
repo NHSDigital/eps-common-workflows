@@ -1,7 +1,4 @@
 rules:
-  dependabot-cooldown:
-    config:
-      days: 3
   secrets-outside-env:
     ignore:
       # these workflows use secrets outside of an environment because it is passed into the workflow
