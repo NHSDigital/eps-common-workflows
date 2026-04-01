@@ -6,11 +6,7 @@
     "args": {
       "DOCKER_GID": "${env:DOCKER_GID:}",
       "IMAGE_NAME": "node_24_python_3_14",
-<<<<<<< Updated upstream
-      "IMAGE_VERSION": "pr-68-7f136dd",
-=======
       "IMAGE_VERSION": "pr-69-0337303",
->>>>>>> Stashed changes
       "USER_UID": "${localEnv:USER_ID:}",
       "USER_GID": "${localEnv:GROUP_ID:}"
     },
