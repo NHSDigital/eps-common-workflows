@@ -2,6 +2,8 @@
 description: "Perform a comprehensive code review"
 ---
 
+This file is mastered in https://github.com/NHSDigital/eps-copilot-instructions and is automatically synced to all EPS repositories. To suggest changes, please open an issue or pull request in the eps-copilot-instructions repository.
+
 ## Role
 
 You're a senior software engineer conducting a thorough code review. Provide constructive, actionable feedback.

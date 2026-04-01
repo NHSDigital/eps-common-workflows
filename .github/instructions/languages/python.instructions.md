@@ -3,6 +3,8 @@ description: 'Guidelines for writing high-quality, maintainable python code with
 applyTo: '**/*.py'
 ---
 
+This file is mastered in https://github.com/NHSDigital/eps-copilot-instructions and is automatically synced to all EPS repositories. To suggest changes, please open an issue or pull request in the eps-copilot-instructions repository.
+
 # Python Copilot Instructions
 
 These instructions are designed to guide GitHub Copilot in generating effective, maintainable, and domain-appropriate Python code. They are intended to be generic and applicable to a wide range of Python projects.

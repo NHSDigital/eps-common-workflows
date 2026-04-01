@@ -3,6 +3,8 @@ description: 'Guidelines for writing, reviewing, and maintaining cloudformation 
 applyTo: 'cloudformation/**'
 ---
 
+This file is mastered in https://github.com/NHSDigital/eps-copilot-instructions and is automatically synced to all EPS repositories. To suggest changes, please open an issue or pull request in the eps-copilot-instructions repository.
+
 ## General
 - Prefer YAML (not JSON). Follow existing style in [cloudformation/account_resources.yml](cloudformation/account_resources.yml), [cloudformation/ci_resources.yml](cloudformation/ci_resources.yml), [cloudformation/artillery_resources.yml](cloudformation/artillery_resources.yml), [cloudformation/account_resources_bootstrap.yml](cloudformation/account_resources_bootstrap.yml), [cloudformation/management.yml](cloudformation/management.yml).
 - Always start with `AWSTemplateFormatVersion: "2010-09-09"`.
