@@ -24,13 +24,16 @@ on:
       pinned_image:
         type: string
         required: true
-permissions:
-  contents: read
-  id-token: write
-  packages: read
+
+permissions: {}
+
 jobs:
   quality_checks:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     container:
       image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
@@ -251,6 +254,10 @@ jobs:
           echo "images=$NORMALIZED" >> "$GITHUB_OUTPUT"
 
   docker_vulnerability_scan:
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     runs-on: ubuntu-22.04
     needs: get_docker_images_to_scan
     container:
@@ -287,6 +294,10 @@ jobs:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
 
   IaC-validation:
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.pinned_image }}
