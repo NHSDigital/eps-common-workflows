@@ -11,3 +11,7 @@ rules:
     ignore:
       - quality-checks-devcontainer.yml
       - tag-release-devcontainer.yml
+  artipacked:
+    ignore:
+      # this is ignored as its based on using an input to the workflow
+      - tag-release-devcontainer.yml:114:15
