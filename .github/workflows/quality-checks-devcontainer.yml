@@ -122,9 +122,7 @@ jobs:
           fi
       - name: Check licenses
         run: |
-          echo "Not currently implemented"
-          exit 0
-          # make grant-scan
+          make grant-scan
       - name: Run code lint
         run: |
           make lint
