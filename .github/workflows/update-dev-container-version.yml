@@ -1,148 +1,23 @@
-name: Update Dev Container Image version
+name: Update devcontainer version
+
 on:
-  workflow_call:
-    inputs:
-      base_branch:
-        required: false
-        type: string
-        default: main
-    secrets:
-      CREATE_PULL_REQUEST_APP_ID:
-        required: true
-      CREATE_PULL_REQUEST_PEM:
-        required: true
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 4"
+permissions: {}
+
 jobs:
-  update_devcontainer_version:
+  update-devcontainer-version:
     runs-on: ubuntu-22.04
+    environment: create_pull_request
     permissions:
       contents: read
       packages: read
-      pull-requests: write
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Update devcontainer version
+        uses: NHSDigital/eps-update-devcontainer@dc3a8c5f11e7226ee4f5f2bb35bd0d1265092306
         with:
-          fetch-depth: 0
-      - name: Load config value
-        id: load-config
-        run: |
-          set -euo pipefail
-          DEVCONTAINER_IMAGE=$(jq -r '.build.args.IMAGE_NAME' .devcontainer/devcontainer.json)
-
-          DEVCONTAINER_VERSION=$(jq -r '.build.args.IMAGE_VERSION' .devcontainer/devcontainer.json)
-
-          {
-            echo "DEVCONTAINER_IMAGE=$DEVCONTAINER_IMAGE"
-            echo "DEVCONTAINER_VERSION=$DEVCONTAINER_VERSION"
-          } >> "$GITHUB_ENV"
-      - name: Resolve latest devcontainer image version from GHCR
-        id: resolve-version
-        env:
-          GH_TOKEN: "${{ github.token }}"
-        run: |
-          set -euo pipefail
-
-
-          PACKAGE_NAME="eps-devcontainers/${DEVCONTAINER_IMAGE}"
-
-          ENCODED_PACKAGE_NAME=$(python3 -c 'import sys, urllib.parse;
-          print(urllib.parse.quote(sys.argv[1], safe=""))' "$PACKAGE_NAME")
-
-
-          VERSIONS_JSON=$(gh api \
-            -H "Accept: application/vnd.github+json" \
-            "/orgs/NHSDigital/packages/container/${ENCODED_PACKAGE_NAME}/versions?per_page=100")
-
-          LATEST_VIA_LATEST_TAG=$(jq -r '
-            [ .[]
-              | select((.metadata.container.tags // []) | index("latest"))
-            ]
-            | sort_by(.created_at)
-            | reverse
-            | .[0].metadata.container.tags // []
-            | map(select(test("^v")))
-            | .[0] // empty
-          ' <<< "$VERSIONS_JSON")
-
-
-          LATEST_V_TAG=$(jq -r '
-            [ .[]
-              | {created_at, tags: (.metadata.container.tags // [])}
-            ]
-            | sort_by(.created_at)
-            | reverse
-            | map(.tags[]? | select(test("^v")))
-            | .[0] // empty
-          ' <<< "$VERSIONS_JSON")
-
-
-          RESOLVED_VERSION="$LATEST_VIA_LATEST_TAG"
-
-          if [[ -z "$RESOLVED_VERSION" ]]; then
-            RESOLVED_VERSION="$LATEST_V_TAG"
-          fi
-
-
-          if [[ -z "$RESOLVED_VERSION" ]]; then
-            echo "No version tag matching ^v found for package ${PACKAGE_NAME}" >&2
-            exit 1
-          fi
-
-
-          echo "Resolved latest version: ${RESOLVED_VERSION}"
-
-          echo "LATEST_DEVCONTAINER_VERSION=${RESOLVED_VERSION}" >> "$GITHUB_ENV"
-
-          echo "latest_version=${RESOLVED_VERSION}" >> "$GITHUB_OUTPUT"
-      - name: Update devcontainer version in config
-        run: |
-          set -euo pipefail
-
-
-          TARGET_VERSION='${{ steps.resolve-version.outputs.latest_version }}'
-
-          if [[ "$TARGET_VERSION" == "$DEVCONTAINER_VERSION" ]]; then
-            echo "IMAGE_VERSION is already up to date (${DEVCONTAINER_VERSION})"
-            exit 0
-          fi
-
-
-          python3 - <<'PY'
-
-          import json
-
-          from pathlib import Path
-
-
-          config_file = Path('.devcontainer/devcontainer.json')
-
-          config = json.loads(config_file.read_text())
-
-          config['build']['args']['IMAGE_VERSION'] = '${{
-          steps.resolve-version.outputs.latest_version }}'
-
-          config_file.write_text(json.dumps(config, indent=2) + '\n')
-
-          PY
-
-
-          echo "Updated IMAGE_VERSION from ${DEVCONTAINER_VERSION} to
-          ${LATEST_DEVCONTAINER_VERSION}"
-      - name: Create GitHub App Token
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-        id: generate-token
-        with:
-          app-id: "${{ secrets.CREATE_PULL_REQUEST_APP_ID }}"
-          private-key: "${{ secrets.CREATE_PULL_REQUEST_PEM }}"
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
-        with:
-          token: "${{ steps.generate-token.outputs.token }}"
-          commit-message: Update devcontainer image version to ${{ steps.resolve-version.outputs.latest_version }}
-          title: "Upgrade: [dependabot] - Update devcontainer image version to ${{ steps.resolve-version.outputs.latest_version }}"
-          body: "This PR updates the devcontainer image version to ${{ steps.resolve-version.outputs.latest_version }}."
-          add-paths: .devcontainer/devcontainer.json
-          sign-commits: true
-          base: "${{ inputs.base_branch }}"
-          delete-branch: true
-          branch: update-devcontainer-version
+          calling_repo_base_branch: main
+          CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
+          CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}

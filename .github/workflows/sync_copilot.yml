@@ -1,78 +1,22 @@
-name: Sync copilot instructions
+name: Sync Copilot Instructions
 
 on:
-  workflow_call:
-    inputs:
-      common_workflows_ref:
-        description: "The ref to sync from the central repository"
-        required: false
-        default: "main"
-        type: string
-      calling_repo_base_branch:
-        description: "The base branch from the calling repository that should be merged into"
-        required: false
-        type: string
-        default: main
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
 
 jobs:
-  sync:
+  sync-copilot-instructions:
     runs-on: ubuntu-22.04
-    environment: "create_pull_request"
+    environment: create_pull_request
     permissions:
       contents: read
-      pull-requests: write
 
     steps:
-      - name: Checkout calling repo code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+      - name: Sync shared instructions
+        uses: NHSDigital/eps-copilot-instructions@a7849a16aabd5c1edef13e29467a480fa08555f8
         with:
-          ref: ${{ inputs.calling_repo_base_branch }}
-          fetch-depth: 0
-
-      - name: Checkout central repo code
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          ref: ${{ inputs.common_workflows_ref }}
-          fetch-depth: 0
-          path: eps-common-workflows
-          repository: NHSDigital/eps-common-workflows
-          sparse-checkout: |
-            .github/instructions/general
-            .github/instructions/languages
-            .github/copilot-instructions.md
-            .github/prompts
-
-      - name: Copy central instructions
-        run: |
-          rm -rf .github/instructions/general
-          rm -rf .github/instructions/languages
-          rm -rf .github/copilot-instructions.md
-          rm -rf .github/prompts
-          mkdir -p .github/instructions/
-          cp -R eps-common-workflows/.github/instructions/general .github/instructions/general
-          cp -R eps-common-workflows/.github/instructions/languages .github/instructions/languages
-          cp eps-common-workflows/.github/copilot-instructions.md .github/copilot-instructions.md
-          cp -R eps-common-workflows/.github/prompts .github/prompts
-          rm -rf eps-common-workflows
-
-      - name: Create GitHub App Token
-        uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859
-        id: generate-token
-        with:
-          app-id: "${{ secrets.CREATE_PULL_REQUEST_APP_ID }}"
-          private-key: "${{ secrets.CREATE_PULL_REQUEST_PEM }}"
-
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@c0f553fe549906ede9cf27b5156039d195d2ece0
-        with:
-          token: "${{ steps.generate-token.outputs.token }}"
-          commit-message: "Upgrade: [dependabot] - sync Copilot instructions"
-          title: "Upgrade: [dependabot] - sync Copilot instructions"
-          body: |
-            Syncing Copilot instructions from central repo.
-            Ref: `${{ inputs.common_workflows_ref }}`
-          branch: copilot-instructions-sync
-          base: ${{ inputs.calling_repo_base_branch }}
-          branch-suffix: random
-          sign-commits: true
-          delete-branch: true
+          copilot_instructions_ref: main
+          calling_repo_base_branch: main
+          CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
+          CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}
