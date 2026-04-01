@@ -2,6 +2,9 @@
 description: 'Guidelines for writing, reviewing, and maintaining SAM templates'
 applyTo: 'SAMtemplates/**'
 ---
+
+This file is mastered in https://github.com/NHSDigital/eps-copilot-instructions and is automatically synced to all EPS repositories. To suggest changes, please open an issue or pull request in the eps-copilot-instructions repository.
+
 ## Scope
 These instructions apply exclusively to files located under the `SAMtemplates` directory. Ensure that any SAM templates or related configurations outside this directory are not governed by these guidelines.
 

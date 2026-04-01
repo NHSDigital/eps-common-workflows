@@ -3,6 +3,8 @@ description: 'Comprehensive guidelines for writing, organizing, and maintaining 
 applyTo: 'terraform/**/*.tf'
 ---
 
+This file is mastered in https://github.com/NHSDigital/eps-copilot-instructions and is automatically synced to all EPS repositories. To suggest changes, please open an issue or pull request in the eps-copilot-instructions repository.
+
 # Terraform Development Guidelines
 
 This document provides best practices and conventions for writing, organizing, and maintaining Terraform code. It is intended for use by developers and GitHub Copilot to ensure consistency, reliability, and maintainability across all Terraform files in the project.

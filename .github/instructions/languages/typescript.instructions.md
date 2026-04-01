@@ -3,6 +3,8 @@ description: 'Guidelines for writing high-quality, maintainable TypeScript code 
 applyTo: '**/*.{ts,tsx}'
 ---
 
+This file is mastered in https://github.com/NHSDigital/eps-copilot-instructions and is automatically synced to all EPS repositories. To suggest changes, please open an issue or pull request in the eps-copilot-instructions repository.
+
 # TypeScript Development Guidelines
 
 This document provides instructions for generating, reviewing, and maintaining TypeScript code. It is designed to guide Copilot and developers in producing domain-specific, robust, and maintainable code across a variety of TypeScript projects.
