@@ -87,6 +87,8 @@ jobs:
           cat /usr/share/secrets-scanner/nhsd-rules-deny.txt
           echo "Showing last few commits"
           git log -5 --oneline
+          echo "showing bad commits"
+          git show e8c26eb44639ad414727f8d5c74110cfd4e36ecc
           echo "Running secret scan"
           git-secrets --scan-history
           echo "scan complete"
