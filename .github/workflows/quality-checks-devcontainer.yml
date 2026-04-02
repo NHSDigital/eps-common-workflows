@@ -76,20 +76,9 @@ jobs:
           make install
       - name: Run secrets scan
         run: |
-          echo "Checking for secret scan config"
-          ls /usr/share/secrets-scanner/nhsd-rules-deny.txt
-          echo "Registering git-secrets AWS rules"
           git-secrets --register-aws
           git-secrets --add-provider -- cat /usr/share/secrets-scanner/nhsd-rules-deny.txt
-          echo "Checking git-secrets configuration"
-          git-secrets --list 
-          echo "Checking content of git-secrets rules"
-          cat /usr/share/secrets-scanner/nhsd-rules-deny.txt
-          echo "Showing last few commits"
-          git log -5 --oneline
-          echo "Running secret scan"
-          git-secrets --scan-history
-          echo "scan complete"
+          make secret-scan
       - name: Run actionlint
         run: |
           make actionlint
