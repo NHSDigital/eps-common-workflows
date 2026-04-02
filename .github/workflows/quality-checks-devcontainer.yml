@@ -25,9 +25,15 @@ on:
         type: string
         required: true
 
+permissions: {}
+
 jobs:
   quality_checks:
     runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     container:
       image: ${{ inputs.pinned_image }}
       options: --user 1001:1001 --group-add 128
@@ -36,16 +42,19 @@ jobs:
         shell: bash
     steps:
       - &init_tool_versions
-        name: copy .tool-versions
+        name: copy needed files from devcontainer user to runner home directory or bin directory
         run: |
           cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+          cp /home/vscode/.grant.yaml "$HOME/.grant.yaml"
+          mkdir -p "$HOME/.local/bin"
+          sudo cp /home/vscode/.local/bin/zizmor /usr/local/bin/zizmor
 
       - &checkout
         name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          ref: ${{ env.BRANCH_NAME }}
           fetch-depth: 0
+          persist-credentials: false
 
       - &setup_npmrc
         name: Setting up .npmrc
@@ -67,12 +76,18 @@ jobs:
           make install
       - name: Run secrets scan
         run: |
+          git-secrets --register-aws
+          git-secrets --add-provider -- cat /usr/share/secrets-scanner/nhsd-rules-deny.txt
           make secret-scan
       - name: Run actionlint
         run: |
           make actionlint
 
-      - name: Check language tools used and setup trivy config
+      - name: Run zizmor
+        run: |
+          make zizmor
+
+      - name: Check language tools used
         id: check_languages
         run: |
           if [ -f "pyproject.toml" ] && grep -q '\[tool.poetry\]' "pyproject.toml"; then
@@ -121,14 +136,7 @@ jobs:
           fi
       - name: Check licenses
         run: |
-          make trivy-license-check
-
-      - name: Show license scan output
-        if: always()
-        run: |
-          if [ -f license_scan.txt ]; then
-            cat .trivy_out/license_scan.txt
-          fi
+          make grant-scan
       - name: Run code lint
         run: |
           make lint
@@ -140,51 +148,19 @@ jobs:
       - name: Run unit tests
         run: |
           make test
-      - name: make generate sbom
+      - name: Generate sbom
         run: |
-          make trivy-generate-sbom
+          make syft-generate-sbom-dev-dependencies
       - name: Upload sbom
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
         with:
-          name: sbom.cdx.json
-          path: .trivy_out/sbom.cdx.json
+          name: sbom.dev.cdx.json
+          path: .sbom/sbom.dev.cdx.json
 
-      - name: Check python vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_poetry == 'true' }}
-        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
+      - name: Check vulnerabilities
         run: |
-          make trivy-scan-python
+          make grype-scan-dev-dependencies
 
-      - name: Check node vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_node == 'true' }}
-        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
-        run: |
-          make trivy-scan-node
-      - name: Check go vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_go == 'true' }}
-        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
-        run: |
-          make trivy-scan-go
-      - name: Check java vulnerabilities
-        if: ${{ steps.check_languages.outputs.uses_java == 'true' }}
-        continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
-        run: |
-          make trivy-scan-java
-      - name: Show vulnerability output
-        if: always()
-        run: |
-          if [ -f .trivy_out/dependency_results_python.txt ]; then
-            cat .trivy_out/dependency_results_python.txt
-          fi
-          if [ -f .trivy_out/dependency_results_node.txt ]; then
-            cat .trivy_out/dependency_results_node.txt
-          fi
-          if [ -f .trivy_out/dependency_results_java.txt ]; then
-            cat .trivy_out/dependency_results_java.txt
-          fi
-          if [ -f .trivy_out/dependency_results_go.txt ]; then
-            cat .trivy_out/dependency_results_go.txt
-          fi
       - name: "check is SONAR_TOKEN exists"
         env:
           super_secret: ${{ secrets.SONAR_TOKEN }}
@@ -279,6 +255,10 @@ jobs:
           echo "images=$NORMALIZED" >> "$GITHUB_OUTPUT"
 
   docker_vulnerability_scan:
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     runs-on: ubuntu-22.04
     needs: get_docker_images_to_scan
     container:
@@ -310,19 +290,15 @@ jobs:
       - name: Check docker vulnerabilities
         continue-on-error: ${{ github.actor == 'dependabot[bot]' }}
         run: |
-          make trivy-scan-docker
+          make grype-scan-docker-image
         env:
           DOCKER_IMAGE: ${{ matrix.docker_image }}
 
-      - name: Show docker vulnerability output
-        if: always()
-        run: |
-          echo "Scan output for ${{ matrix.docker_image }}"
-          if [ -f .trivy_out/dependency_results_docker.txt ]; then
-            cat .trivy_out/dependency_results_docker.txt
-          fi
-
   IaC-validation:
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     runs-on: ubuntu-22.04
     container:
       image: ${{ inputs.pinned_image }}

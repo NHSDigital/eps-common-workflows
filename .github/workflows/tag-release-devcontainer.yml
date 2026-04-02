@@ -79,6 +79,8 @@ on:
             PYPI_TOKEN:
                 required: false
                 description: "PyPI token to publish packages"
+
+permissions: {}
 jobs:
     tag_release:
         permissions:
@@ -114,6 +116,7 @@ jobs:
               with:
                   repository: ${{ github.repository }}
                   ref: ${{ github.sha }}
+                  persist-credentials: ${{ ! inputs.dry_run }} # only persist credentials when not running in dry-run mode
 
             - name: Checkout semantic-release workflow
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -127,6 +130,7 @@ jobs:
                       release.config.cjs
                       releaseNotesTemplates/commit.hbs
                       packages/
+                  persist-credentials: false
             - name: Install semantic release dependencies globally
               run: |
                   cd common_workflow_config
@@ -249,29 +253,6 @@ jobs:
               run: |
                   npx semantic-release --tag-format "${TAG_FORMAT}"
 
-            - name: Get release for editing
-              if: ${{ !inputs.dry_run }}
-              id: get_release
-              # version 1.2.4
-              uses: cardinalby/git-get-release-action@5172c3a026600b1d459b117738c605fabc9e4e44
-              env:
-                  GITHUB_TOKEN: ${{ github.token }}
-              with:
-                  tag: ${{ steps.output_version_tag.outputs.VERSION_TAG }}
-
-            - name: Edit Release
-              if: ${{ !inputs.dry_run }}
-              # version 1.2.0
-              uses: irongut/EditRelease@ccf529ad26dddf9996e7dd0f24ca5da4ea507cc2
-              with:
-                  token: ${{ secrets.GITHUB_TOKEN }}
-                  id: ${{ steps.get_release.outputs.id }}
-                  body: |
-                      ## Info
-                      [Release workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) - Workflow ID: ${{ github.run_id }}
-
-                      It was initialized by [${{ github.event.sender.login }}](${{ github.event.sender.html_url }})
-
             - name: Checkout gh-pages branch
               if: ${{ !inputs.dry_run }}
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -279,12 +260,12 @@ jobs:
                   repository: ${{ github.repository }}
                   ref: gh-pages
                   path: gh-pages
+                  persist-credentials: true # needed for push to gh-pages
 
             - name: Publish release notes to gh-pages
               if: ${{ !inputs.dry_run }}
               working-directory: gh-pages
               env:
-                  RELEASE_ID: ${{ steps.get_release.outputs.id }}
                   VERSION_TAG: ${{ steps.output_version_tag.outputs.VERSION_TAG }}
                   GH_REPO: ${{ github.repository }}
                   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -294,8 +275,7 @@ jobs:
                   notes_dir="release_notes"
                   mkdir -p "$notes_dir"
                   note_file="$notes_dir/${VERSION_TAG}.md"
-
-                  gh api "/repos/${GH_REPO}/releases/${RELEASE_ID}" | jq -r '.body // ""' > "$note_file"
+                  cp ../electronic-prescription-service-api/CHANGELOG.md "$note_file"
 
                   if [ ! -s "$note_file" ]; then
                       echo "Release notes are empty; skipping gh-pages update."
@@ -319,5 +299,7 @@ jobs:
               shell: bash
               run: |
                   TIMESTAMP=$(date +%s)
-                  VERSION=$(echo ${{ steps.output_version_tag.outputs.VERSION_TAG }} | tr . -)
+                  VERSION=$(echo "${VERSION_TAG}" | tr . -)
                   echo CHANGE_SET_VERSION="$VERSION-$TIMESTAMP" >> "$GITHUB_OUTPUT"
+              env:
+                  VERSION_TAG: ${{ steps.output_version_tag.outputs.VERSION_TAG }}

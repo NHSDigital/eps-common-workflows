@@ -1,0 +1,17 @@
+rules:
+  secrets-outside-env:
+    ignore:
+      # these workflows use secrets outside of an environment because it is passed into the workflow
+      - tag-release-devcontainer.yml
+      - update-dev-container-version.yml
+      - quality-checks-devcontainer.yml
+      - dependabot-auto-approve-and-merge.yml
+  unpinned-images:
+    # these workflows use unpinned images because they are using a full image passed in that contains the tag
+    ignore:
+      - quality-checks-devcontainer.yml
+      - tag-release-devcontainer.yml
+  artipacked:
+    ignore:
+      # this is ignored as its based on using an input to the workflow
+      - tag-release-devcontainer.yml:114:15
