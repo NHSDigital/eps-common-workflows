@@ -89,7 +89,8 @@ jobs:
           echo "Showing last few commits"
           git log -5 --oneline
           echo "Running secret scan"
-          git-secrets --scan-history .
+          git-secrets --scan-history
+          echo "scan complete"
       - name: Run actionlint
         run: |
           make actionlint
