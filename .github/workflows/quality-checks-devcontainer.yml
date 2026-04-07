@@ -220,8 +220,15 @@ jobs:
     outputs:
       docker_images: ${{ steps.normalized_docker_images.outputs.images }}
     steps:
-      - *init_tool_versions
-      - *checkout
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
       - name: Determine docker images to scan
         id: normalized_docker_images
         env:
@@ -292,10 +299,28 @@ jobs:
       matrix:
         docker_image: ${{ fromJson(needs.get_docker_images_to_scan.outputs.docker_images) }}
     steps:
-      - *init_tool_versions
-      - *checkout
-      - *setup_npmrc
-      - *cache_npm
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Setting up .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Cache npm dependencies
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: make install
         run: |
@@ -331,10 +356,28 @@ jobs:
       run:
         shell: bash
     steps:
-      - *init_tool_versions
-      - *checkout
-      - *setup_npmrc
-      - *cache_npm
+      - name: copy .tool-versions
+        run: |
+          cp /home/vscode/.tool-versions "$HOME/.tool-versions"
+
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          ref: ${{ env.BRANCH_NAME }}
+          fetch-depth: 0
+
+      - name: Setting up .npmrc
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" >> ~/.npmrc
+          echo "@nhsdigital:registry=https://npm.pkg.github.com" >> ~/.npmrc
+
+      - name: Cache npm dependencies
+        uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7
+        with:
+          path: ./node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
 
       - name: Check for SAM templates
         id: check_sam_templates
