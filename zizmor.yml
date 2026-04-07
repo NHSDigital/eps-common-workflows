@@ -14,4 +14,4 @@ rules:
   artipacked:
     ignore:
       # this is ignored as its based on using an input to the workflow
-      - tag-release-devcontainer.yml:114:15
+      - tag-release-devcontainer.yml:115:15
