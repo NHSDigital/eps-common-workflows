@@ -39,9 +39,14 @@ on:
                 description: Resolved digest for the supplied image reference
                 value: ${{ jobs.verify_attestation.outputs.resolved_digest }}
 
+permissions: {}
 jobs:
     get_config_values:
         runs-on: ubuntu-22.04
+        permissions:
+            attestations: read
+            contents: read
+            packages: read
         outputs:
             tag_format: ${{ steps.load-config.outputs.TAG_FORMAT }}
             devcontainer_version: ${{ steps.load-config.outputs.DEVCONTAINER_VERSION }}
@@ -51,8 +56,8 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
               with:
-                  ref: ${{ env.BRANCH_NAME }}
                   fetch-depth: 0
+                  persist-credentials: false
 
             - name: Load config value
               id: load-config

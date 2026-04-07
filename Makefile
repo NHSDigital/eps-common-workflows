@@ -3,7 +3,7 @@
 install: install-node install-python install-hooks
 
 install-node:
-	npm ci
+	npm ci --ignore-scripts true
 
 install-python:
 	poetry install

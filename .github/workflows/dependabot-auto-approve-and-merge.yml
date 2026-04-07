@@ -8,14 +8,14 @@ on:
             AUTOMERGE_PEM:
                 required: true
 
-permissions:
-    pull-requests: write
-    contents: write
-
+permissions: {}
 jobs:
     dependabot:
         runs-on: ubuntu-22.04
-        if: ${{ github.actor == 'dependabot[bot]' }}
+        permissions:
+            pull-requests: write
+            contents: write
+        if: (github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'eps-create-pull-request[bot]') && github.repository == github.event.pull_request.head.repo.full_name
         steps:
             - name: Get token from Github App
               id: get_app_token

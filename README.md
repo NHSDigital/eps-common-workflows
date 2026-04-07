@@ -6,86 +6,16 @@ The workflows that are available to use are
 
 ## Workflow Index
 
-- [Combine Dependabot PRs](#combine-dependabot-prs)
 - [Dependabot Auto Approve and Merge](#dependabot-auto-approve-and-merge)
-- [Sync copilot instructions](#sync-copilot-instructions)
 - [PR Title Check](#pr-title-check)
 - [Get Repo Config](#get-repo-config)
-- [Quality Checks](#quality-checks)
 - [Quality Checks - Dev Container Version](#quality-checks---dev-container-version)
-- [Update Dev Container Version](#update-dev-container-version)
-- [Tag Release](#tag-release)
 - [Tag Release - Devcontainer Version](#tag-release---devcontainer-version)
 
 ## Other Docs
 
-- [Adding Exclusions to Trivy Scanning](#adding-exclusions-to-trivy-scanning)
-- [Secret Scanning Docker](#secret-scanning-docker)
 - [Run All Releases](#run-all-releases)
 
-## Adding Exclusions to Trivy Scanning
-The quality checks job uses Trivy to scan for vulnerabilities.   
-There may be times you want to add an exclusion for a known vulnerability that we are happy to accept
-To do this, in the calling repo, add trivy.yaml with this content
-```
-ignorefile: ".trivyignore.yaml"
-```
-and add a .trivyignore.yaml with this content
-```
-vulnerabilities:
-  - id: CVE-2026-24842
-    paths:
-      - "package-lock.json"
-    statement: downstream dependency for tar - waiting for new npm release
-    expired_at: 2026-06-01
-```
-See https://trivy.dev/docs/latest/configuration/filtering/#trivyignoreyaml for more details
-
-## Combine Dependabot PRs
-
-This workflow can be called to combine multiple open Dependabot PRs into a single PR.
-
-#### Inputs
-
-- `branchPrefix`: Branch prefix to find combinable PRs based on. Default: `dependabot`
-- `mustBeGreen`: Only combine PRs that are green (status is success). Default: `true`
-- `combineBranchName`: Name of the branch to combine PRs into. Default: `combine-dependabot-PRs`
-- `ignoreLabel`: Exclude PRs with this label. Default: `nocombine`
-
-#### Example
-
-```yaml
-name: Combine Dependabot PRs
-
-on:
-  workflow_dispatch:
-    inputs:
-      branchPrefix:
-        description: "Branch prefix to find combinable PRs based on"
-        required: true
-        type: string
-      mustBeGreen:
-        description: "Only combine PRs that are green (status is success)"
-        required: true
-        type: boolean
-      combineBranchName:
-        description: "Name of the branch to combine PRs into"
-        required: true
-        type: string
-      ignoreLabel:
-        description: "Exclude PRs with this label"
-        required: true
-        type: string
-
-jobs:
-  combine-dependabot-prs:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/combine-dependabot-prs.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-    with:
-      branchPrefix: ${{ github.event.inputs.branchPrefix }}
-      mustBeGreen: ${{ github.event.inputs.mustBeGreen }}
-      combineBranchName: ${{ github.event.inputs.combineBranchName }}
-      ignoreLabel: ${{ github.event.inputs.ignoreLabel }}
-```
 
 ## Dependabot Auto Approve and Merge
 This workflow can be called to automatically approve and merge Dependabot PRs as part of the pull request workflow.
@@ -109,40 +39,6 @@ jobs:
     secrets:
       AUTOMERGE_APP_ID: ${{ secrets.AUTOMERGE_APP_ID }}
       AUTOMERGE_PEM: ${{ secrets.AUTOMERGE_PEM }}
-```
-## Sync copilot instructions
-This workflow syncs Copilot instructions from this repo into another repo and opens a PR with the changes.   
-It uses the environment secrets CREATE_PULL_REQUEST_APP_ID and CREATE_PULL_REQUEST_PEM that are defined in the create_pull_request environment in each repo
-
-#### Inputs
-
-- `common_workflows_ref`: Branch in common workflows repo to sync from. Default: `main`
-- `calling_repo_base_branch`: The base branch in the calling repository. Default: `main`.
-
-
-
-#### Example
-
-```yaml
-name: Sync Copilot Instructions
-
-on:
-  workflow_dispatch:
-    inputs:
-      common_workflows_ref:
-        description: "Branch to sync from"
-        required: false
-        type: string
-        default: main
-
-jobs:
-  sync-copilot:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/sync_copilot.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-    with:
-      ref: ${{ github.event.inputs.common_workflows_ref }}
-    secrets:
-      CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
-      CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}
 ```
 ## PR Title Check
 This workflow checks that all pull requests have a title that matches the required format, and comments on the PR with a link to the relevant ticket if a ticket reference is found.
@@ -198,53 +94,6 @@ jobs:
     uses: NHSDigital/eps-common-workflows/.github/workflows/get-repo-config.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
 ```
 
-## Quality Checks
-This workflow runs common quality checks.   
-To use this, you must have the following Makefile targets defined
-- install
-- lint
-- test
-- install-node (only for cdk projects)
-- compile (only for cdk projects)
-- cdk-synth (only for cdk projects)
-- docker-build (only if run_docker_scan is set to true)
-
-#### Inputs
-
-- `install_java`: Whether to install Java or not
-- `run_sonar`: Whether to run Sonar checks or not.
-- `asdfVersion`: Override the version of asdf to install.
-- `reinstall_poetry`: If you are using this from a primarily Python based project, you should set this to true to force a poetry reinstallation after Python is installed
-- `run_docker_scan`: whether to run a scan of Docker images
-- `docker_images`: csv list of Docker images to scan. These must match images produced by make docker-build
-
-#### Secret Inputs
-- `SONAR_TOKEN`: Token used to authenticate to Sonar
-
-#### Outputs
-
-None
-
-#### Example
-
-To use this workflow in your repository, call it from another workflow file:
-
-```yaml
-name: Release
-
-on:
-  workflow_dispatch:
-
-jobs:
-  quality_checks:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/quality-checks.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-    needs: [get_asdf_version]
-    with:
-      asdfVersion: ${{ needs.get_asdf_version.outputs.asdf_version }}
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-```
-
 ## Quality Checks - Dev Container Version
 This workflow runs common quality checks using a prebuilt devcontainer (https://github.com/NHSDigital/eps-devcontainers).
 To use this, you must have overridden any common makefile targets described in https://github.com/NHSDigital/eps-devcontainers?tab=readme-ov-file#common-makefile-targets
@@ -284,90 +133,6 @@ jobs:
       docker_images: fhir-facade,validator
     secrets:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-```
-
-## Update Dev Container Version
-This workflow updates `.devcontainer/devcontainer.json` with the latest published `v*` version for your configured devcontainer image from GHCR, then opens (or updates) a pull request with that change.
-
-#### Requirements
-
-- `.devcontainer/devcontainer.json` must include `build.args.IMAGE_NAME` and `build.args.IMAGE_VERSION`.
-- `CREATE_PULL_REQUEST_APP_ID` and `CREATE_PULL_REQUEST_PEM` secrets must be configured so the workflow can create a GitHub App token for PR creation.
-
-#### Inputs
-
-- `base_branch`: Target branch for the pull request. Default: `main`.
-
-#### Secret Inputs
-
-- `CREATE_PULL_REQUEST_APP_ID`: GitHub App ID used to generate an installation token.
-- `CREATE_PULL_REQUEST_PEM`: GitHub App private key used to generate an installation token.
-
-#### Outputs
-
-None
-
-#### Example
-
-To use this workflow in your repository, call it from another workflow file:
-
-```yaml
-name: Update Devcontainer Version
-
-on:
-  workflow_dispatch:
-
-jobs:
-  update_devcontainer_version:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/update-dev-container-version.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-    with:
-      base_branch: main
-    secrets:
-      CREATE_PULL_REQUEST_APP_ID: ${{ secrets.CREATE_PULL_REQUEST_APP_ID }}
-      CREATE_PULL_REQUEST_PEM: ${{ secrets.CREATE_PULL_REQUEST_PEM }}
-```
-
-## Tag Release
-This workflow uses the semantic-release npm package to generate a new version tag, changelog, and GitHub release for a repo.
-
-#### Inputs
-
-- `dry_run`: Whether to run in dry_run mode (do not create tags) or not
-- `tag_format`: Default `v\\${version}`. A template for the version tag.
-- `branch_name`: The branch name to base the release on
-- `publish_packages`: comma separated list of package folders to publish to an npm registry
-- `asdfVersion`: Override the version of asdf to install.
-- `main_branch`: The branch to use for publishing. Defaults to main
-- `extra_artifact_name`: optional param to include an extra artifact in the release
-- `extra_artifact_id`: optional param of the extra artifact id to include in the release
-- `extra_artifact_run_id`: optional param of the run id to download the extra artifact id to include in the release
-- `extra_artifact_repository`: optional param to indicate which repo the run to download the artifact was from
-
-#### Outputs
-
-- `version_tag`: The version tag created by semantic-release.
-- `change_set_version`: A timestamped string that can be used for creating changesets.
-- `next_version_tag`: The next version tag that will be created.
-
-#### Example
-
-To use this workflow in your repository, call it from another workflow file:
-
-```yaml
-name: Release
-
-on:
-  workflow_dispatch:
-
-jobs:
-  tag_release:
-    uses: NHSDigital/eps-common-workflows/.github/workflows/tag-release.yml@f5c8313a10855d0cc911db6a9cd666494c00045a
-    with:
-      tag_format: "v\\${version}-beta"
-      dry_run: true
-      asdfVersion: 0.18.0
-      branch_name: main
-      publish_packages: ""
 ```
 
 ## Tag Release - Devcontainer Version
@@ -418,44 +183,6 @@ jobs:
 ```
 
 
-## Secret Scanning Docker
-
-The secret scanning also has a Dockerfile, which can be run against a repo in order to scan it manually (or as part of pre-commit hooks). This can be done like so:
-```bash
-docker build -f https://raw.githubusercontent.com/NHSDigital/eps-workflow-quality-checks/refs/tags/v3.0.0/dockerfiles/nhsd-git-secrets.dockerfile -t git-secrets .
-docker run -v /path/to/repo:/src git-secrets --scan-history .
-```
-For usage of the script, see the [source repo](https://github.com/NHSDigital/software-engineering-quality-framework/blob/main/tools/nhsd-git-secrets/git-secrets). Generally, you will either need `--scan -r .` or `--scan-history .`. The arguments default to `--scan -r .`, i.e. scanning the current state of the code.
-
-In order to enable the pre-commit hook for secret scanning (to prevent developers from committing secrets in the first place), add the following to the `.devcontainer/devcontainer.json` file:
-```json
-{
-    "remoteEnv": { "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}" },
-    "postAttachCommand": "docker build -f https://raw.githubusercontent.com/NHSDigital/eps-workflow-quality-checks/refs/tags/v4.0.2/dockerfiles/nhsd-git-secrets.dockerfile -t git-secrets . && pre-commit install --install-hooks -f",
-    "features": {
-      "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
-        "version": "latest",
-        "moby": "true",
-        "installDockerBuildx": "true"
-      }
-    }
-}
-```
-
-And add this pre-commit hook to the `.pre-commit-config.yaml` file:
-```yaml
-repos:
-- repo: local
-  hooks:
-    - id: git-secrets
-      name: Git Secrets
-      description: git-secrets scans commits, commit messages, and --no-ff merges to prevent adding secrets into your git repositories.
-      entry: bash
-      args:
-        - -c
-        - 'docker run -v "$LOCAL_WORKSPACE_FOLDER:/src" git-secrets --pre_commit_hook'
-      language: system
-```
 
 ## Run All Releases
 

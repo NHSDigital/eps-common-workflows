@@ -7,12 +7,21 @@ on:
 env:
   BRANCH_NAME: ${{ github.event.ref.BRANCH_NAME }}
 
+permissions: {}
 jobs:
   get_config_values:
     uses: ./.github/workflows/get-repo-config.yml
+    permissions:
+      attestations: read
+      contents: read
+      packages: read
   quality_checks:
     needs: [get_config_values]
     uses: ./.github/workflows/quality-checks-devcontainer.yml
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
     with:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
     secrets:
@@ -28,4 +37,3 @@ jobs:
       pinned_image: ${{ needs.get_config_values.outputs.pinned_image }}
       branch_name: main
       tag_format: ${{ needs.get_config_values.outputs.tag_format }}
-    secrets: inherit

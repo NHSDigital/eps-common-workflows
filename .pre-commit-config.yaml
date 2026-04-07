@@ -17,6 +17,14 @@ repos:
         files: ^(.github)
   - repo: local
     hooks:
+      - id: grype-scan-local
+        name: Grype scan local changes
+        entry: make
+        args: ["grype-scan-local"]
+        language: system
+        pass_filenames: false
+        always_run: true
+
       - id: check-commit-signing
         name: Check commit signing
         description: Ensures that commits are GPG signed
@@ -45,6 +53,7 @@ repos:
           - -c
           - "git-secrets --pre_commit_hook"
         language: system
+
       - id: lint-githubactions
         name: Lint github actions
         entry: make
