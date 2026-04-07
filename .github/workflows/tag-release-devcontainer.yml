@@ -275,7 +275,7 @@ jobs:
                   notes_dir="release_notes"
                   mkdir -p "$notes_dir"
                   note_file="$notes_dir/${VERSION_TAG}.md"
-                  cp ../electronic-prescription-service-api/CHANGELOG.md "$note_file"
+                  cp ../CHANGELOG.md "$note_file"
 
                   if [ ! -s "$note_file" ]; then
                       echo "Release notes are empty; skipping gh-pages update."
