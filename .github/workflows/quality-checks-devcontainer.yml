@@ -193,6 +193,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    permissions:
+      contents: read
     outputs:
       docker_images: ${{ steps.normalized_docker_images.outputs.images }}
     steps:
