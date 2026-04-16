@@ -47,7 +47,11 @@ jobs:
           cp /home/vscode/.tool-versions "$HOME/.tool-versions"
           cp /home/vscode/.grant.yaml "$HOME/.grant.yaml"
           mkdir -p "$HOME/.local/bin"
-          sudo cp /home/vscode/.local/bin/zizmor /usr/local/bin/zizmor
+          if [ -f /home/vscode/.local/bin/zizmor ]; then
+            sudo cp /home/vscode/.local/bin/zizmor /usr/local/bin/zizmor
+          else
+            echo "zizmor not found at /home/vscode/.local/bin/zizmor; skipping copy"
+          fi
 
       - &checkout
         name: Checkout code
