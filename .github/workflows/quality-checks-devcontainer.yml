@@ -18,7 +18,8 @@ on:
         required: false
       docker_images:
         type: string
-        description: comma separated list of docker image references to scan when docker scanning is enabled.
+        description: comma separated list of docker image references to scan when docker
+          scanning is enabled.
         default: ""
         required: false
       pinned_image:
@@ -42,7 +43,8 @@ jobs:
         shell: bash
     steps:
       - &init_tool_versions
-        name: copy needed files from devcontainer user to runner home directory or bin directory
+        name: copy needed files from devcontainer user to runner home directory or bin
+          directory
         run: |
           cp /home/vscode/.tool-versions "$HOME/.tool-versions"
           cp /home/vscode/.grant.yaml "$HOME/.grant.yaml"
@@ -80,8 +82,6 @@ jobs:
           make install
       - name: Run secrets scan
         run: |
-          git-secrets --register-aws
-          git-secrets --add-provider -- cat /usr/share/secrets-scanner/nhsd-rules-deny.txt
           make secret-scan
       - name: Run actionlint
         run: |
@@ -172,7 +172,8 @@ jobs:
         run: echo "SONAR_TOKEN_EXISTS=true" >> "$GITHUB_ENV"
 
       - name: Run SonarQube analysis
-        if: ${{ steps.check_languages.outputs.uses_java == 'true' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_java == 'true' &&
+          env.SONAR_TOKEN_EXISTS == 'true' }}
         run: |
           # issues with sonar scanner and sslcontext-kickstart 9.1.0, forcing re-download
           rm -rf ~/.m2/repository/io/github/hakky54/sslcontext-kickstart/9.1.0
@@ -184,7 +185,8 @@ jobs:
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@299e4b793aaa83bf2aba7c9c14bedbb485688ec4
-        if: ${{ steps.check_languages.outputs.uses_java == 'false' && env.SONAR_TOKEN_EXISTS == 'true' }}
+        if: ${{ steps.check_languages.outputs.uses_java == 'false' &&
+          env.SONAR_TOKEN_EXISTS == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -364,7 +366,8 @@ jobs:
           fi
 
       - name: Run cfn-lint
-        if: steps.check_sam_templates.outputs.sam_exists == 'true' || steps.check_cf_templates.outputs.cf_exists == 'true'
+        if: steps.check_sam_templates.outputs.sam_exists == 'true' ||
+          steps.check_cf_templates.outputs.cf_exists == 'true'
         run: |
           make cfn-lint
 
