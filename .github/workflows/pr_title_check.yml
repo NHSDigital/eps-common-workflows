@@ -37,7 +37,7 @@ jobs:
                   if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot|adhoc)\].*-.*$ ]]; then
                     echo "PR title contains ticket reference, was raised by dependabot or is an adhoc change."
                   else
-                    echo "PR title does not contain ticket reference, was not raised by dependabot, and is not an adhoc change."
+                    echo "PR title does not contain ticket reference or 'adhoc' label."
                     exit 1
                   fi
 
