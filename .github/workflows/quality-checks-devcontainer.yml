@@ -156,7 +156,7 @@ jobs:
         run: |
           make syft-generate-sbom-dev-dependencies
       - name: Upload sbom
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: sbom.dev.cdx.json
           path: .sbom/sbom.dev.cdx.json
@@ -424,7 +424,7 @@ jobs:
 
       - name: Upload cfn_guard_output
         if: failure()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: cfn_guard_output
           path: .cfn_guard_out
