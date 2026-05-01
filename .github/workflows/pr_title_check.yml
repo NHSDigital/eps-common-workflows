@@ -29,10 +29,15 @@ jobs:
               env:
                   PR_TITLE: ${{ github.event.pull_request.title }}
               run: |
-                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot)\].*-.*$ ]]; then
-                    echo "PR title contains ticket or dependabot reference."
+                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-0000)\].*-.*$ ]]; then
+                    echo "PR title uses AEA-0000 placeholder. Please use 'adhoc' instead of 'AEA-0000' for adhoc changes."
+                    exit 1
+                  fi
+
+                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot|adhoc)\].*-.*$ ]]; then
+                    echo "PR title contains ticket reference, was raised by dependabot or is an adhoc change."
                   else
-                    echo "PR title does not contain ticket or dependabot reference."
+                    echo "PR title does not contain ticket reference or 'adhoc' label."
                     exit 1
                   fi
 
@@ -42,7 +47,7 @@ jobs:
               env:
                   PR_TITLE: ${{ github.event.pull_request.title }}
               run: |
-                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot)\].*-.*$ ]]; then
+                  if [[ "$PR_TITLE" =~ ^.*:.*\[([A-Z]+-[0-9]+|dependabot|adhoc)\].*-.*$ ]]; then
                     TICKET_REF="${BASH_REMATCH[1]}"
                     echo "Extracted ticket reference: $TICKET_REF"
                     echo "TICKET_REF=$TICKET_REF" > "$GITHUB_OUTPUT"
